@@ -1,0 +1,3622 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CleanResume</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="public/js/tailwind.js"></script>
+  <script src="public/js/lucide.js"></script>
+  <script src="public/js/html2pdf.bundle.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: [
+              "Inter",
+              "-apple-system",
+              "BlinkMacSystemFont",
+              "Segoe UI",
+              "Roboto",
+              "Helvetica Neue",
+              "Noto Sans SC",
+              "sans-serif",
+            ],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --bg: 0 0% 100%;
+      --fg: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-fg: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-fg: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --muted: 240 4.8% 95.9%;
+      --muted-fg: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-fg: 240 5.9% 10%;
+      --border: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --accent-color: #6366f1;
+    }
+
+    .dark {
+      --bg: 240 10% 3.9%;
+      --fg: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-fg: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-fg: 240 5.9% 10%;
+      --secondary: 240 3.7% 15.9%;
+      --muted: 240 3.7% 15.9%;
+      --muted-fg: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-fg: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+      --accent-color: #2dd4bf;
+    }
+
+    * {
+      box-sizing: border-box;
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted)) transparent;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted));
+      border-radius: 4px;
+    }
+
+    body {
+      background: hsl(var(--bg));
+      color: hsl(var(--fg));
+      font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        "Helvetica Neue",
+        "Noto Sans SC",
+        sans-serif;
+      margin: 0;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .fieldset-outline {
+      border: 1px solid hsl(var(--border));
+      border-radius: 0.5rem;
+      padding: 10px 10px;
+      position: relative;
+      background: transparent;
+    }
+
+    .fieldset-outline legend {
+      font-size: 0.6875rem;
+      padding: 0 4px;
+      color: hsl(var(--muted-fg));
+      position: absolute;
+      top: -0.5em;
+      left: 8px;
+      background: hsl(var(--card));
+    }
+
+    .fieldset-outline input,
+    .fieldset-outline textarea,
+    .fieldset-outline .tags-display {
+      background: transparent;
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 0.8125rem;
+      color: hsl(var(--fg));
+      resize: none;
+    }
+
+    .fieldset-outline input::placeholder,
+    .fieldset-outline textarea::placeholder {
+      color: hsl(var(--muted-fg));
+      opacity: 0;
+    }
+
+    .fieldset-outline:focus-within {
+      border-color: var(--accent-color);
+    }
+
+    .fieldset-outline:focus-within input::placeholder,
+    .fieldset-outline:focus-within textarea::placeholder {
+      opacity: 1;
+    }
+
+    .fieldset-outline textarea {
+      min-height: 60px;
+      line-height: 1.5;
+    }
+
+    .panel-slide {
+      position: fixed;
+      top: 56px;
+      bottom: 44px;
+      left: 0;
+      width: 420px;
+      max-width: 100vw;
+      transform: translateX(-100%);
+      opacity: 0;
+      transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
+      z-index: 40;
+      background: hsl(var(--card));
+      border-right: 1px solid hsl(var(--border));
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-slide.open {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 640px) {
+      .panel-slide {
+        width: 100vw;
+      }
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid hsl(var(--border));
+      flex-shrink: 0;
+      min-height: 44px;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .panel-footer {
+      display: flex;
+      justify-content: space-evenly;
+      padding: 0.5rem 0.75rem;
+      border-top: 1px solid hsl(var(--border));
+      flex-shrink: 0;
+      gap: 0.375rem;
+    }
+
+    .btn-round {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      transition:
+        transform 0.15s,
+        box-shadow 0.15s;
+      padding: 8px;
+    }
+
+    .btn-round:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-round:active {
+      transform: scale(0.97);
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: hsl(var(--fg));
+      padding: 4px;
+      border-radius: 6px;
+      transition:
+        background 0.15s,
+        color 0.15s;
+    }
+
+    .btn-icon:hover {
+      background: hsl(var(--accent));
+    }
+
+    .btn-icon.btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+
+    .btn-icon.btn-accent:hover {
+      background: hsl(var(--accent));
+      color: var(--accent-color);
+    }
+
+    .entry-card {
+      border: 1px dashed hsl(var(--border));
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: border-color 0.15s;
+    }
+
+    .entry-card:hover {
+      border-color: var(--accent-color);
+    }
+
+    .entry-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 8px 8px 0 0;
+      transition: background 0.15s;
+    }
+
+    .entry-header:hover {
+      background: hsl(var(--accent));
+    }
+
+    .section-box {
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition:
+        box-shadow 0.15s,
+        opacity 0.15s;
+    }
+
+    .section-box:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-box.dragging {
+      opacity: 0.4;
+    }
+
+    .section-box.drag-over-top {
+      border-top: 2px solid var(--accent-color);
+    }
+
+    .section-box.drag-over-bottom {
+      border-bottom: 2px solid var(--accent-color);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 8px;
+      transition: background 0.15s;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .section-header:hover {
+      background: hsl(var(--accent));
+    }
+
+    .section-header:active {
+      cursor: grabbing;
+    }
+
+    .section-body {
+      padding: 4px 8px 8px;
+    }
+
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 1px 8px;
+      border-radius: 9999px;
+      border: 1px solid hsl(var(--border));
+      font-size: 0.75rem;
+      white-space: nowrap;
+      transition:
+        border-color 0.15s,
+        opacity 0.15s;
+    }
+
+    .tag-chip:hover {
+      border-color: var(--accent-color);
+    }
+
+    .tag-chip.dragging {
+      opacity: 0.4;
+    }
+
+    .tag-chip.drag-over {
+      border-color: var(--accent-color);
+      border-style: solid;
+    }
+
+    .tag-chip button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      line-height: 1;
+      padding: 0 2px;
+      color: hsl(var(--muted-fg));
+    }
+
+    .tag-chip button:hover {
+      color: #ef4444;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: hsl(var(--card));
+      border-width: 1px;
+      border-color: hsl(var(--border));
+      border-radius: 12px;
+      max-width: 520px;
+      width: 90%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.open .modal-box {
+      transform: scale(1);
+    }
+
+    .notif-container {
+      position: fixed;
+      top: 64px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 90%;
+      max-width: 420px;
+      pointer-events: none;
+    }
+
+    .notif {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      font-size: 0.8125rem;
+      pointer-events: auto;
+      animation: notifIn 0.3s ease forwards;
+    }
+
+    .notif.out {
+      animation: notifOut 0.3s ease forwards;
+    }
+
+    @keyframes notifIn {
+      from {
+        opacity: 0;
+        transform: translateY(-12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes notifOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-12px);
+      }
+    }
+
+    .drop-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(99, 102, 241, 0.15);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .drop-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .preview-paper {
+      width: 794px;
+      min-height: 1123px;
+      background: #fff;
+      color: #1a1a1a;
+      position: relative;
+      font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .color-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition:
+        transform 0.15s,
+        border-color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .color-dot:hover {
+      transform: scale(1.15);
+    }
+
+    .color-dot.active {
+      border-color: hsl(var(--fg));
+      transform: scale(1.15);
+    }
+
+    .setting-group {
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .setting-group legend {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0 6px;
+      color: hsl(var(--muted-fg));
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .slider-row label {
+      font-size: 0.75rem;
+      color: hsl(var(--muted-fg));
+      min-width: 60px;
+      flex-shrink: 0;
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent-color);
+      height: 4px;
+    }
+
+    .slider-row .slider-val {
+      font-size: 0.6875rem;
+      color: hsl(var(--muted-fg));
+      min-width: 36px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      background: hsl(var(--muted));
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch.on {
+      background: var(--accent-color);
+    }
+
+    .toggle-switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch.on::after {
+      transform: translateX(16px);
+    }
+
+    .setting-text-input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid hsl(var(--border));
+      background: transparent;
+      font-size: 0.75rem;
+      padding: 4px 0;
+      outline: none;
+      color: hsl(var(--fg));
+      transition: border-color 0.15s;
+    }
+
+    .setting-text-input:focus {
+      border-bottom-color: var(--accent-color);
+    }
+
+    @keyframes emptySwitch {
+
+      0%,
+      45% {
+        opacity: 1;
+      }
+
+      50%,
+      95% {
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes emptySwitch2 {
+
+      0%,
+      45% {
+        opacity: 0;
+      }
+
+      50%,
+      95% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .empty-tip-1 {
+      animation: emptySwitch 5s ease-in-out infinite;
+    }
+
+    .empty-tip-2 {
+      animation: emptySwitch2 5s ease-in-out infinite;
+    }
+
+    @keyframes ping {
+
+      75%,
+      100% {
+        transform: scale(1.8);
+        opacity: 0;
+      }
+    }
+
+    .ping-dot {
+      animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spin-icon {
+      animation: spin 1s linear infinite;
+    }
+
+    .template-card {
+      border: 2px solid hsl(var(--border));
+      border-radius: 4px;
+      padding: 3px 4px;
+      cursor: pointer;
+      transition:
+        border-color 0.15s,
+        transform 0.15s;
+      background: #fff;
+      overflow: hidden;
+      display: flex;
+      align-items: stretch;
+    }
+
+    .template-card:hover {
+      transform: scale(1.03);
+    }
+
+    .template-card.active {
+      border-color: var(--accent-color);
+    }
+
+    .template-card-inner {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .editor-footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      border-radius: 9999px;
+      border: 1px solid hsl(var(--border));
+      cursor: pointer;
+      transition:
+        transform 0.15s,
+        box-shadow 0.15s,
+        color 0.15s,
+        border-color 0.15s;
+      background: transparent;
+      color: hsl(var(--fg));
+      padding: 0.375rem 0.5rem;
+      font-size: 0.625rem;
+      font-weight: 500;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .editor-footer-btn:hover {
+      background: hsl(var(--accent));
+      color: var(--accent-color);
+      transform: scale(1.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .editor-footer-btn:active {
+      transform: scale(0.97);
+    }
+
+    @media (min-width: 640px) {
+      .editor-footer-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.6875rem;
+        gap: 0.375rem;
+      }
+    }
+
+    .float-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition:
+        transform 0.15s,
+        box-shadow 0.15s,
+        border-color 0.15s;
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+    }
+
+    .float-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      background: hsl(var(--accent));
+      color: var(--accent-color);
+    }
+
+    .float-btn:active {
+      transform: scale(0.97);
+    }
+
+    .add-section-list {
+      display: none;
+      border-top: 1px solid hsl(var(--border));
+      max-height: 260px;
+      overflow-y: auto;
+      background: hsl(var(--card));
+      flex-shrink: 0;
+    }
+
+    .add-section-list.open {
+      display: block;
+    }
+
+    .add-section-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 0.8125rem;
+    }
+
+    .add-section-item:hover {
+      background: hsl(var(--accent));
+      color: var(--accent-color);
+    }
+
+    .add-section-item.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .validation-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+
+    .validation-table th,
+    .validation-table td {
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: middle;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .validation-table th {
+      font-weight: 600;
+      color: hsl(var(--muted-fg));
+    }
+
+    #preview-container {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    #preview-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      background: hsl(var(--bg) / 0.75);
+      transition:
+        opacity 0.5s ease,
+        transform 0.5s ease;
+    }
+
+    .loading-overlay.dismissed {
+      opacity: 0;
+      transform: scale(1.02);
+      pointer-events: none;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .load-fade {
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .load-slide {
+      animation: slideIn 0.4s ease both;
+    }
+
+    @keyframes bounceSoft {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(5px);
+      }
+    }
+
+    .bounce-soft {
+      animation: bounceSoft 1.8s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="text-center max-w-xs mx-auto px-6">
+      <div class="load-fade" style="animation-delay: 0.1s">
+        <div style="
+              width: 56px;
+              height: 56px;
+              border-radius: 14px;
+              background: var(--accent-color);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 16px;
+            ">
+          <i data-lucide="file-text" style="width: 28px; height: 28px; color: #fff"></i>
+        </div>
+      </div>
+      <h1 class="text-xl font-bold load-fade" style="animation-delay: 0.2s" data-i18n="siteTitle">
+        CleanResume
+      </h1>
+      <p class="text-sm mt-1 load-fade" style="color: hsl(var(--muted-fg)); animation-delay: 0.3s"
+        id="loading-subtitle"></p>
+      <div id="loading-features" class="my-6 text-left"></div>
+      <div class="load-fade" style="animation-delay: 0.9s">
+        <p class="text-xs" style="color: hsl(var(--muted-fg))" id="loading-dismiss"></p>
+        <div style="margin-top: 6px; display: flex; justify-content: center">
+          <i data-lucide="chevron-down" style="
+                width: 14px;
+                height: 14px;
+                display: block;
+                color: hsl(var(--muted-fg));
+              " class="bounce-soft"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 50;
+        background: hsl(var(--card));
+        border-bottom: 1px solid hsl(var(--border));
+      ">
+    <div class="flex items-center gap-2">
+      <i data-lucide="file-text" style="width: 22px; height: 22px; color: var(--accent-color)"></i><span
+        class="font-semibold text-base" data-i18n="siteTitle">CleanResume</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="lang-btn" class="btn-icon btn-accent text-xs font-medium px-2 py-1"
+        style="border-radius: 6px"></button><button id="theme-btn" class="btn-icon btn-accent p-1"
+        style="border-radius: 6px"></button>
+    </div>
+  </header>
+
+  <main id="app-body" style="
+        position: fixed;
+        top: 56px;
+        bottom: 44px;
+        left: 0;
+        right: 0;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        padding: 16px;
+      ">
+    <div id="editor-panel" class="panel-slide">
+      <div class="panel-header">
+        <div class="flex items-center gap-2">
+          <i data-lucide="square-pen" style="width: 16px; height: 16px; color: var(--accent-color)"></i><span
+            class="font-semibold text-sm" data-i18n="editor">Editor</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button class="btn-icon btn-accent p-1" onclick="flipToSettings()">
+            <i data-lucide="arrow-left-right" style="width: 15px; height: 15px"></i></button><button
+            class="btn-icon btn-danger p-1" onclick="confirmClear()">
+            <i data-lucide="rotate-ccw" style="width: 15px; height: 15px"></i></button><button
+            class="btn-icon btn-danger p-1" onclick="toggleEditor()">
+            <i data-lucide="x" style="width: 15px; height: 15px"></i>
+          </button>
+        </div>
+      </div>
+      <div id="editor-body" class="panel-body"></div>
+      <div id="add-section-list" class="add-section-list"></div>
+      <div class="panel-footer" id="editor-footer"></div>
+    </div>
+    <div id="settings-panel" class="panel-slide">
+      <div class="panel-header">
+        <div class="flex items-center gap-2">
+          <i data-lucide="settings-2" style="width: 16px; height: 16px; color: var(--accent-color)"></i><span
+            class="font-semibold text-sm" data-i18n="settings">Settings</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button class="btn-icon btn-accent p-1" onclick="flipToEditor()">
+            <i data-lucide="arrow-right-left" style="width: 15px; height: 15px"></i></button><button
+            class="btn-icon btn-danger p-1" onclick="confirmResetSettings()">
+            <i data-lucide="rotate-ccw" style="width: 15px; height: 15px"></i></button><button
+            class="btn-icon btn-danger p-1" onclick="toggleSettings()">
+            <i data-lucide="x" style="width: 15px; height: 15px"></i>
+          </button>
+        </div>
+      </div>
+      <div id="settings-body" class="panel-body"></div>
+    </div>
+    <div id="preview-container" class="w-full h-full" style="
+          overflow: auto;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          padding: 16px;
+          position: relative;
+        ">
+      <div id="preview-wrapper" style="flex-shrink: 0; transform-origin: top center">
+        <div id="preview-paper" class="preview-paper"></div>
+      </div>
+    </div>
+    <div style="
+          position: fixed;
+          right: 24px;
+          bottom: 60px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          z-index: 30;
+        ">
+      <button class="float-btn" onclick="toggleSettings()" style="width: 40px; height: 40px">
+        <i data-lucide="settings-2" style="width: 18px; height: 18px"></i></button><button class="float-btn"
+        onclick="toggleEditor()" style="width: 40px; height: 40px">
+        <i data-lucide="pen-line" style="width: 18px; height: 18px"></i></button><button class="btn-round"
+        onclick="savePDF()" id="float-save" style="
+            width: 44px;
+            height: 44px;
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            position: relative;
+          ">
+        <span class="ping-dot" style="
+              position: absolute;
+              inset: 0;
+              border-radius: 9999px;
+              background: var(--accent-color);
+              opacity: 0.4;
+            "></span><i data-lucide="download" style="width: 18px; height: 18px; position: relative; z-index: 1"></i>
+      </button>
+    </div>
+  </main>
+
+  <footer style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        z-index: 50;
+        background: hsl(var(--card));
+        border-top: 1px solid hsl(var(--border));
+        font-size: 0.75rem;
+        color: hsl(var(--muted-fg));
+      ">
+    <span data-i18n="copyRight">&copy; 2026 CleanResume</span><a href="https://github.com" target="_blank" rel="noopener" class="inline-flex"
+      style="color: hsl(var(--muted-fg)); transition: color 0.15s" onmouseover="this.style.color = 'hsl(var(--fg))'"
+      onmouseout="this.style.color = 'hsl(var(--muted-fg))'"><svg viewBox="0 0 16 16" width="16" height="16"
+        fill="currentColor">
+        <path
+          d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
+        </path>
+      </svg></a><span> | </span>
+      <a href="/cleanresume/simplified-version.html" target="_blank" rel="noopener" class="inline-flex"
+      style="color: hsl(var(--muted-fg)); transition: color 0.15s" onmouseover="this.style.color = 'hsl(var(--fg))'"
+      onmouseout="this.style.color = 'hsl(var(--muted-fg))'" data-i18n="simplifiedV">Simplified Version</a>
+  </footer>
+
+  <div id="modal-overlay" class="modal-overlay" onclick="if (event.target === this) hideModal();">
+    <div class="modal-box">
+      <div class="flex items-center gap-2 p-4">
+        <i data-lucide="triangle-alert" style="width: 20px; height: 20px; color: #f97316"></i><span id="modal-title"
+          class="font-semibold text-sm"></span>
+      </div>
+      <div id="modal-body" class="px-4 py-3 text-xs" style="
+            border-top: 1px solid hsl(var(--border));
+            border-bottom: 1px solid hsl(var(--border));
+            overflow: visible;
+          "></div>
+      <div class="flex justify-end gap-2 p-3">
+        <button class="btn-round px-4 py-1.5 text-xs font-medium"
+          style="background: hsl(var(--secondary)); color: hsl(var(--fg))" onclick="hideModal()" data-i18n="cancel">
+          Cancel</button><button id="modal-confirm" class="btn-round px-4 py-1.5 text-xs font-medium"
+          style="background: var(--accent-color); color: #fff" onclick="modalConfirmAction()"></button>
+      </div>
+    </div>
+  </div>
+  <div id="notif-container" class="notif-container"></div>
+  <div id="drop-overlay" class="drop-overlay">
+    <div class="text-center">
+      <i data-lucide="file-input" style="
+            width: 48px;
+            height: 48px;
+            color: var(--accent-color);
+            margin: 0 auto 12px;
+            display: block;
+          "></i>
+      <p class="text-lg font-semibold" style="color: var(--accent-color)">
+        Drop JSON file to import
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      data: "cleanResume_data",
+      ui: "cleanResume_ui",
+      settings: "cleanResume_settings",
+    };
+    const A4W = 794,
+      A4H = 1123;
+    const PRESET_COLORS = [
+      "#6366f1",
+      "#8b5cf6",
+      "#a855f7",
+      "#d946ef",
+      "#ec4899",
+      "#f43f5e",
+      "#ef4444",
+      "#f97316",
+      "#f59e0b",
+      "#eab308",
+      "#84cc16",
+      "#22c55e",
+      "#10b981",
+      "#14b8a6",
+      "#06b6d4",
+      "#0ea5e9",
+      "#3b82f6",
+      "#2563eb",
+      "#1d4ed8",
+      "#4338ca",
+    ];
+    const SECTION_DEFS = {
+      education: {
+        icon: "graduation-cap",
+        keyField: "university",
+        fields: [
+          { key: "university", type: "text" },
+          { key: "location", type: "text" },
+          { key: "degree", type: "text" },
+          { key: "fieldOfStudy", type: "text" },
+          { key: "duration", type: "duration" },
+          { key: "description", type: "textarea" },
+        ],
+      },
+      experience: {
+        icon: "briefcase",
+        keyField: "company",
+        fields: [
+          { key: "company", type: "text" },
+          { key: "position", type: "text" },
+          { key: "location", type: "text" },
+          { key: "duration", type: "duration" },
+          { key: "description", type: "textarea" },
+        ],
+      },
+      projects: {
+        icon: "code-2",
+        keyField: "name",
+        fields: [
+          { key: "name", type: "text" },
+          { key: "institution", type: "text" },
+          { key: "role", type: "text" },
+          { key: "duration", type: "duration" },
+          { key: "tags", type: "tags" },
+          { key: "description", type: "textarea" },
+        ],
+      },
+      awards: {
+        icon: "trophy",
+        keyField: "title",
+        fields: [
+          { key: "title", type: "text" },
+          { key: "issuer", type: "text" },
+          { key: "date", type: "text" },
+        ],
+      },
+      certifications: {
+        icon: "badge-check",
+        keyField: "name",
+        fields: [
+          { key: "name", type: "text" },
+          { key: "issuer", type: "text" },
+          { key: "date", type: "text" },
+        ],
+      },
+      languages: {
+        icon: "languages",
+        keyField: "language",
+        fields: [
+          { key: "language", type: "text" },
+          { key: "fluency", type: "text" },
+        ],
+      },
+      skills: {
+        icon: "wrench",
+        keyField: "category",
+        fields: [
+          { key: "category", type: "text" },
+          { key: "tags", type: "tags" },
+        ],
+      },
+    };
+
+/*
+
+    - 模版配置项说明：
+    ```json
+    {
+        "colorOn": ["name", "title", "line", "icon", "tag"],//预览色添加对象：姓名，板块标题，分割线，图标，标签
+        "profileLayout": "left",//"center","split" //个人信息布局【姓名&职位-联系信息】
+        "separator": "after",//"left","below" //分割线相对板块标题位置
+        "showIcon": true //是否展示板块图标
+    }
+    ```    
+*/
+    const TEMPLATES_FALLBACK = [
+      {
+        colorOn: ["line"],
+        profileLayout: "left",
+        separator: "after",
+        showIcon: true,
+      },
+      {
+        colorOn: [],
+        profileLayout: "left",
+        separator: "after",
+        showIcon: false,
+      },
+      {
+        colorOn: [],
+        profileLayout: "left",
+        separator: "below",
+        showIcon: true,
+      },
+      {
+        colorOn: [],
+        profileLayout: "left",
+        separator: "below",
+        showIcon: false,
+      },
+      {
+        colorOn: [],
+        profileLayout: "left",
+        separator: "left",
+        showIcon: false,
+      },
+
+      {
+        colorOn: [],
+        profileLayout: "split",
+        separator: "after",
+        showIcon: true,
+      },
+      {
+        colorOn: [],
+        profileLayout: "split",
+        separator: "after",
+        showIcon: false,
+      },
+      {
+        colorOn: [],
+        profileLayout: "split",
+        separator: "below",
+        showIcon: true,
+      },
+      {
+        colorOn: [],
+        profileLayout: "split",
+        separator: "below",
+        showIcon: false,
+      },
+      {
+        colorOn: [],
+        profileLayout: "split",
+        separator: "left",
+        showIcon: false,
+      },
+
+      {
+        colorOn: [],
+        profileLayout: "center",
+        separator: "after",
+        showIcon: true,
+      },
+      {
+        colorOn: [],
+        profileLayout: "center",
+        separator: "after",
+        showIcon: false,
+      },
+      {
+        colorOn: [],
+        profileLayout: "center",
+        separator: "below",
+        showIcon: true,
+      },
+      {
+        colorOn: [],
+        profileLayout: "center",
+        separator: "below",
+        showIcon: false,
+      },
+      {
+        colorOn: [],
+        profileLayout: "center",
+        separator: "left",
+        showIcon: false,
+      },
+
+      {
+        colorOn: ["line"],
+        profileLayout: "left",
+        separator: "below",
+        showIcon: false,
+      },
+      {
+        colorOn: ["tag"],
+        profileLayout: "left",
+        separator: "below",
+        showIcon: false,
+      },
+      {
+        colorOn: ["name", "line"],
+        profileLayout: "left",
+        separator: "left",
+        showIcon: false,
+      },
+      {
+        colorOn: ["line"],
+        profileLayout: "left",
+        separator: "left",
+        showIcon: false,
+      },
+      {
+        colorOn: ["tag"],
+        profileLayout: "split",
+        separator: "left",
+        showIcon: false,
+      }
+    ];
+
+    // Available globally, but initially empty (or uses fallback)
+    let TEMPLATES = [...TEMPLATES_FALLBACK]; 
+/*
+- Custom template support
+    - path:data/templates.json
+    // Helper function to create a timeout promise that rejects
+    function timeout(ms) {
+      return new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout")), ms)
+      );
+    }
+
+    async function initTemplates(timeoutMs = 300) {
+      try {
+        // Race the fetch+parse against the timeout
+        const data = await Promise.race([
+          fetch("data/templates.json").then(res => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.json();
+          }),
+          timeout(timeoutMs)
+        ]);
+
+        if (Array.isArray(data) && data.length > 0) {
+          TEMPLATES = data;
+          console.log("Templates successfully loaded from JSON.");
+        } else {
+          console.warn("templates.json is empty or not an array. Keeping fallback.");
+        }
+      } catch (error) {
+        if (error.message === "Timeout") {
+          console.warn(`Fetching templates.json timed out after ${timeoutMs}ms. Keeping fallback.`);
+        } else {
+          console.warn("Could not load templates.json. Keeping fallback.", error.message);
+        }
+      }
+    }
+*/
+    const I18N = {
+      "en-US": {
+        siteTitle:"CleanResume",
+        copyRight:"© 2026 CleanResume",
+        simplifiedV:"Simplified Version",
+        warning: "Warning",
+        profile: "Profile",
+        education: "Education",
+        experience: "Experience",
+        projects: "Projects",
+        awards: "Awards",
+        certifications: "Certifications",
+        languages: "Languages",
+        skills: "Skills",
+        fullName: "Full Name",
+        position: "Position",
+        email: "Email",
+        phone: "Phone",
+        location: "Location",
+        website: "Website",
+        summary: "Summary",
+        duration: "Duration",
+        university: "University",
+        degree: "Degree",
+        fieldOfStudy: "Field of Study",
+        description: "Description",
+        company: "Company",
+        name: "Name",
+        institution: "Institution",
+        role: "Role",
+        tags: "Tags",
+        title: "Title",
+        issuer: "Issuer",
+        date: "Date",
+        language: "Language",
+        fluency: "Fluency",
+        category: "Category",
+        ph_fullName: "e.g. John Smith",
+        ph_position: "e.g. Senior Software Engineer",
+        ph_email: "e.g. john@example.com",
+        ph_phone: "e.g. +1 (555) 123-4567",
+        ph_location: "e.g. New York, USA",
+        ph_website: "e.g. github.com/johnsmith",
+        ph_summary: "Brief professional summary...",
+        ph_university: "e.g. MIT",
+        ph_degree: "e.g. Bachelor of Science",
+        ph_fieldOfStudy: "e.g. Computer Science",
+        ph_durationFrom: "Jan 2020",
+        ph_durationTo: "Dec 2024",
+        ph_description: "• Key achievement\n• Another point with **bold**",
+        ph_company: "e.g. Google",
+        ph_name: "e.g. Resume Builder",
+        ph_institution: "e.g. Google",
+        ph_role: "e.g. Lead Developer",
+        ph_tags: "Press Enter to add",
+        ph_title: "e.g. Best Paper Award",
+        ph_issuer: "e.g. IEEE",
+        ph_date: "Jan 2020",
+        ph_language: "e.g. English",
+        ph_fluency: "e.g. Native",
+        ph_category: "e.g. Frontend",
+        editor: "Editor",
+        settings: "Settings",
+        import: "Import",
+        export: "Export",
+        load: "Load",
+        addSection: "Add",
+        reset: "Reset",
+        cancel: "Cancel",
+        confirm: "Confirm",
+        notify_imported: "Imported from {file}",
+        notify_exported: "Exported as {file}",
+        notify_loaded: "Sample data loaded",
+        notify_cleared: "Resume data cleared",
+        notify_reset: "Settings reset to defaults",
+        notify_sectionAdded: "{section} section added",
+        notify_sectionRemoved: "{section} section removed",
+        notify_entryAdded: "Entry added to {section}",
+        notify_entryRemoved: "{key} removed from {section}",
+        notify_invalidFile: "Unsupported file type. Please drop a JSON file.",
+        notify_saved: "PDF saved as {file}",
+        notify_saveFailed: "PDF save failed",
+        notify_failed: "Operation failed",
+        modal_importTitle: "Import Resume",
+        modal_importWarning: "Imported data will replace current resume.",
+        modal_clearTitle: "Clear Resume",
+        modal_clearBody: "Clear all resume data? This cannot be undone.",
+        modal_resetTitle: "Reset Settings",
+        modal_resetBody: "Reset all settings to defaults?",
+        modal_loadTitle: "Load Sample",
+        modal_loadBody: "Load sample data? Current data will be replaced.",
+        modal_removeSectionTitle: "Remove Section",
+        modal_removeSectionBody: "Remove {section} section?",
+        modal_removeEntryTitle: "Remove Entry",
+        modal_removeEntryBody: "Remove {key} from {section}?",
+        template: "Template",
+        pagination: "Pagination",
+        singlePage: "Single Page PDF",
+        watermark: "Watermark",
+        watermarkText: "Watermark Text",
+        fontSize: "Font Size",
+        opacity: "Opacity",
+        xOffset: "X Offset",
+        yOffset: "Y Offset",
+        previewColor: "Preview Color",
+        pagePadding: "Page Padding",
+        top: "Top",
+        bottom: "Bottom",
+        left: "Left",
+        right: "Right",
+        typography: "Typography",
+        lineHeight: "Line Height",
+        spacing: "Spacing",
+        sectionSpacing: "Section",
+        entrySpacing: "Entry",
+        emptyTip1: "Click the editor button to start building your resume",
+        emptyTip2: "Drop a JSON file to import your resume data",
+        val_section: "Section",
+        val_key: "Key",
+        val_state: "State",
+        val_allMatched: "All matched",
+        val_partial: "Partially matched",
+        val_ignored: "Ignored",
+        val_warning: "Imported data will replace current resume data.",
+        added: "Added",
+        loadSub: "Build beautiful resumes with ease",
+        loadF1: "Visual editor with real-time preview",
+        loadF2: "20 customizable templates",
+        loadF3: "Multi-language support",
+        loadF4: "Export to PDF with one click",
+        loadF5: "Import & export data as JSON",
+        loadDismiss: "Scroll or swipe to start",
+      },
+      "zh-CN": {
+        siteTitle:"简历工具",
+        copyRight:"© 2026 简历工具",
+        simplifiedV:"简化版",
+        warning: "警告",
+        profile: "个人资料",
+        education: "教育背景",
+        experience: "工作经历",
+        projects: "项目经验",
+        awards: "荣誉奖项",
+        certifications: "资格证书",
+        languages: "语言能力",
+        skills: "专业技能",
+        fullName: "姓名",
+        position: "职位",
+        email: "邮箱",
+        phone: "电话",
+        location: "所在地",
+        website: "网站",
+        summary: "简介",
+        duration: "时间段",
+        university: "学校",
+        degree: "学位",
+        fieldOfStudy: "专业",
+        description: "描述",
+        company: "公司",
+        name: "名称",
+        institution: "机构",
+        role: "角色",
+        tags: "标签",
+        title: "奖项名称",
+        issuer: "颁发机构",
+        date: "日期",
+        language: "语言",
+        fluency: "熟练度",
+        category: "类别",
+        ph_fullName: "例如：张三",
+        ph_position: "例如：高级软件工程师",
+        ph_email: "例如：zhangsan@example.com",
+        ph_phone: "例如：+86 138 0000 0000",
+        ph_location: "例如：北京，中国",
+        ph_website: "例如：github.com/zhangsan",
+        ph_summary: "简要职业介绍...",
+        ph_university: "例如：清华大学",
+        ph_degree: "例如：学士",
+        ph_fieldOfStudy: "例如：计算机科学",
+        ph_durationFrom: "2020.01",
+        ph_durationTo: "2024.06",
+        ph_description: "• 主要成就或职责\n• 另一要点，支持**加粗**",
+        ph_company: "例如：阿里巴巴",
+        ph_name: "例如：智能推荐系统",
+        ph_institution: "例如：阿里巴巴",
+        ph_role: "例如：项目负责人",
+        ph_tags: "按回车添加标签",
+        ph_title: "例如：优秀论文奖",
+        ph_issuer: "例如：IEEE",
+        ph_date: "2020.01",
+        ph_language: "例如：英语",
+        ph_fluency: "例如：母语",
+        ph_category: "例如：前端开发",
+        editor: "编辑器",
+        settings: "设置",
+        import: "导入",
+        export: "导出",
+        load: "示例",
+        addSection: "添加",
+        reset: "重置",
+        cancel: "取消",
+        confirm: "确认",
+        notify_imported: "已从 {file} 导入",
+        notify_exported: "已导出为 {file}",
+        notify_loaded: "示例数据已加载",
+        notify_cleared: "简历数据已清空",
+        notify_reset: "设置已重置为默认值",
+        notify_sectionAdded: "{section}板块已添加",
+        notify_sectionRemoved: "{section}板块已移除",
+        notify_entryAdded: "已在{section}添加条目",
+        notify_entryRemoved: "已从{section}移除{key}",
+        notify_invalidFile: "不支持的文件类型，请拖入JSON文件",
+        notify_saved: "PDF已保存为 {file}",
+        notify_saveFailed: "PDF保存失败",
+        notify_failed: "操作失败",
+        modal_importTitle: "导入简历",
+        modal_importWarning: "导入数据将替换当前简历。",
+        modal_clearTitle: "清空简历",
+        modal_clearBody: "确定清空所有简历数据？此操作不可撤销。",
+        modal_resetTitle: "重置设置",
+        modal_resetBody: "确定将所有设置重置为默认值？",
+        modal_loadTitle: "加载示例",
+        modal_loadBody: "确定加载示例？当前数据将被替换。",
+        modal_removeSectionTitle: "移除板块",
+        modal_removeSectionBody: "确定移除{section}板块？",
+        modal_removeEntryTitle: "移除条目",
+        modal_removeEntryBody: "确定从{section}中移除{key}？",
+        template: "模板",
+        pagination: "分页",
+        singlePage: "单页PDF",
+        watermark: "水印",
+        watermarkText: "水印文字",
+        fontSize: "字体大小",
+        opacity: "不透明度",
+        xOffset: "X偏移",
+        yOffset: "Y偏移",
+        previewColor: "预览颜色",
+        pagePadding: "页面边距",
+        top: "上",
+        bottom: "下",
+        left: "左",
+        right: "右",
+        typography: "排版",
+        lineHeight: "行高",
+        spacing: "间距",
+        sectionSpacing: "板块",
+        entrySpacing: "条目",
+        emptyTip1: "点击编辑器按钮开始构建简历",
+        emptyTip2: "拖入JSON文件导入简历数据",
+        val_section: "板块",
+        val_key: "关键字段",
+        val_state: "状态",
+        val_allMatched: "全部匹配",
+        val_partial: "部分匹配",
+        val_ignored: "已忽略",
+        val_warning: "导入数据将替换当前简历数据。",
+        added: "已添加",
+        loadSub: "轻松构建精美简历",
+        loadF1: "可视化编辑器，实时预览",
+        loadF2: "20种可定制模板",
+        loadF3: "多语言支持",
+        loadF4: "一键导出PDF",
+        loadF5: "导入导出JSON数据",
+        loadDismiss: "滚动或上滑开始使用",
+      },
+    };
+    function t(k) {
+      return I18N[settings.locale]?.[k] || I18N["en-US"]?.[k] || k;
+    }
+    function genId() {
+      return "id-" + Math.random().toString(36).substr(2, 6);
+    }
+    function escHTML(s) {
+      return String(s || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+    function escAttr(s) {
+      return String(s || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;");
+    }
+    const DEFAULT_SETTINGS = {
+      theme: "light",
+      locale: "en-US",
+      template: 0,
+      singlePage: false,
+      watermark: {
+        text: "",
+        fontSize: 14,
+        opacity: 10,
+        xOffset: 0,
+        yOffset: 0,
+      },
+      previewColor: "#6366f1",
+      padding: { top: 40, bottom: 40, left: 40, right: 40 },
+      typography: { fontSize: 13, lineHeight: 1.5 },
+      spacing: { section: 16, entry: 10 },
+    };
+
+    
+    const sampleDataEnUS = {
+      profile: {
+        fullName: "San Zhang",
+        position: "Senior Full-Stack Developer",
+        email: "san.zhang@email.com",
+        phone: "+1 (415) 555-0192",
+        location: "San Francisco, CA",
+        website: "github.com/sanzhang",
+        summary: "Passionate full-stack developer with 7+ years of experience building scalable web applications and leading cross-functional teams. Expertise in React, Node.js, and cloud infrastructure. Proven track record of delivering high-impact products on tight deadlines."
+      },
+      sections: [
+        {
+          id: "s1",
+          type: "education",
+          entries: [
+            {
+              id: "e1",
+              university: "University of California, Berkeley",
+              location: "Berkeley, CA",
+              degree: "Master of Science",
+              fieldOfStudy: "Computer Science",
+              duration: "Sep 2016 - Jun 2018",
+              description: "- GPA: 3.92/4.0, Dean's List\n- **Research Focus:** Distributed Systems and Cloud Computing\n- Published 2 papers in top-tier conferences (SOSP, OSDI)\n- Teaching Assistant for Advanced Algorithms course"
+            },
+            {
+              id: "e2",
+              university: "University of California, Los Angeles",
+              location: "Los Angeles, CA",
+              degree: "Bachelor of Science",
+              fieldOfStudy: "Software Engineering",
+              duration: "Sep 2012 - Jun 2016",
+              description: "- Graduated Magna Cum Laude\n- **Senior Project:** Real-time collaborative code editor\n- President of Computer Science Student Association"
+            }
+          ]
+        },
+        {
+          id: "s2",
+          type: "experience",
+          entries: [
+            {
+              id: "e3",
+              company: "Google LLC",
+              position: "Staff Software Engineer",
+              location: "Mountain View, CA",
+              duration: "Mar 2021 - Present",
+              description: "- Led architecture redesign of core search service serving 10M+ daily active users\n- **Reduced API latency by 45%** through caching optimization and query restructuring\n- Mentored 4 junior engineers and conducted 50+ technical interviews\n- Drove adoption of gRPC microservices, improving inter-service communication efficiency by 30%"
+            },
+            {
+              id: "e4",
+              company: "Stripe Inc.",
+              position: "Senior Software Engineer",
+              location: "San Francisco, CA",
+              duration: "Jul 2018 - Feb 2021",
+              description: "- Built payment processing microservices handling $2B+ in annual transactions\n- **Improved system reliability to 99.99% uptime** with zero-downtime deployments\n- Led migration from monolith to event-driven microservices architecture\n- Designed real-time fraud detection system reducing false positives by 60%"
+            },
+            {
+              id: "e4b",
+              company: "Salesforce",
+              position: "Software Engineer",
+              location: "Seattle, WA",
+              duration: "Jun 2016 - Jun 2018",
+              description: "- Developed CRM dashboard features used by 500K+ enterprise users\n- **Optimized data visualization rendering by 3x** using virtual scrolling\n- Collaborated with UX team to redesign analytics module"
+            }
+          ]
+        },
+        {
+          id: "s3",
+          type: "projects",
+          entries: [
+            {
+              id: "e5",
+              name: "CloudSync Platform",
+              institution: "Google",
+              role: "Tech Lead",
+              duration: "Jan 2023 - Present",
+              tags: ["React", "Go", "Kubernetes", "gRPC", "PostgreSQL"],
+              description: "- Designed real-time sync engine for collaborative documents with operational transform\n- **Handles 50K concurrent connections** with sub-100ms latency at P99\n- Implemented end-to-end encryption ensuring zero-knowledge architecture\n- Built auto-scaling infrastructure reducing operational costs by 40%"
+            },
+            {
+              id: "e6",
+              name: "DataPipeline SDK",
+              institution: "Stripe",
+              role: "Core Contributor",
+              duration: "Jun 2020 - Dec 2022",
+              tags: ["Python", "Apache Kafka", "Redis", "Docker"],
+              description: "- Built SDK adopted by 200+ internal services across 15 teams\n- **Reduced data pipeline setup time by 70%** with declarative configuration\n- Achieved 99.95% message delivery guarantee with exactly-once semantics"
+            },
+            {
+              id: "e6b",
+              name: "InsightDash Analytics",
+              institution: "Salesforce",
+              role: "Lead Frontend",
+              duration: "Sep 2017 - May 2019",
+              tags: ["Vue.js", "D3.js", "GraphQL", "WebSocket"],
+              description: "- Built interactive analytics dashboard with 30+ chart types\n- **Reduced initial load time from 8s to 1.2s** via code splitting and lazy loading\n- Implemented real-time data streaming with WebSocket fallback"
+            }
+          ]
+        },
+        {
+          id: "s4",
+          type: "awards",
+          entries: [
+            { id: "e7", title: "Best Innovation Award", issuer: "Google I/O 2023", date: "May 2023" },
+            { id: "e8", title: "Hackathon Champion", issuer: "TechCrunch Disrupt SF", date: "Sep 2022" },
+            { id: "e8b", title: "Outstanding Engineer", issuer: "Stripe Engineering", date: "Dec 2020" }
+          ]
+        },
+        {
+          id: "s5",
+          type: "certifications",
+          entries: [
+            { id: "e9", name: "AWS Solutions Architect Professional", issuer: "Amazon Web Services", date: "Mar 2023" },
+            { id: "e10", name: "Certified Kubernetes Administrator (CKA)", issuer: "Cloud Native Computing Foundation", date: "Nov 2022" },
+            { id: "e10b", name: "Google Cloud Professional Data Engineer", issuer: "Google Cloud", date: "Aug 2021" }
+          ]
+        },
+        {
+          id: "s6",
+          type: "skills",
+          entries: [
+            { id: "e11", category: "Frontend", tags: ["React", "Vue.js", "TypeScript", "Tailwind CSS", "Next.js", "Webpack"] },
+            { id: "e12", category: "Backend", tags: ["Node.js", "Go", "Python", "PostgreSQL", "Redis", "GraphQL"] },
+            { id: "e13", category: "DevOps & Cloud", tags: ["Docker", "Kubernetes", "AWS", "Terraform", "CI/CD", "Prometheus"] },
+            { id: "e13b", category: "Testing & Quality", tags: ["Jest", "Cypress", "Playwright", "TDD", "Load Testing"] }
+          ]
+        },
+        {
+          id: "s7",
+          type: "languages",
+          entries: [
+            { id: "e14", language: "English", fluency: "Native / Bilingual" },
+            { id: "e15", language: "Mandarin Chinese", fluency: "Native" },
+            { id: "e16", language: "Japanese", fluency: "Conversational (JLPT N2)" },
+            { id: "e16b", language: "Spanish", fluency: "Basic" }
+          ]
+        }
+      ]
+    };
+
+    const sampleDataZhCN = {
+      profile: {
+        fullName: "张三",
+        position: "高级全栈工程师",
+        email: "zhangsan@email.com",
+        phone: "+86 138-0000-1234",
+        location: "上海市浦东新区",
+        website: "github.com/zhansan",
+        summary: "拥有7年以上经验的全栈工程师，专注于构建可扩展的Web应用和领导跨职能团队。精通React、Node.js和云基础设施，在紧迫期限内交付高影响力产品方面拥有丰富经验。"
+      },
+      sections: [
+        {
+          id: "s1",
+          type: "education",
+          entries: [
+            {
+              id: "e1",
+              university: "清华大学",
+              location: "北京",
+              degree: "硕士",
+              fieldOfStudy: "计算机科学与技术",
+              duration: "2016.09 - 2018.06",
+              description: "- 绩点：3.92/4.0，院长荣誉名单\n- **研究方向：** 分布式系统与云计算\n- 在顶级会议（SOSP、OSDI）发表2篇论文\n- 担任高级算法课程助教"
+            },
+            {
+              id: "e2",
+              university: "北京大学",
+              location: "北京",
+              degree: "学士",
+              fieldOfStudy: "软件工程",
+              duration: "2012.09 - 2016.06",
+              description: "- 以优异成绩毕业\n- **毕业设计：** 实时协作代码编辑器\n- 计算机科学学生协会主席"
+            }
+          ]
+        },
+        {
+          id: "s2",
+          type: "experience",
+          entries: [
+            {
+              id: "e3",
+              company: "字节跳动",
+              position: "资深工程师",
+              location: "北京",
+              duration: "2021.03 - 至今",
+              description: "- 主导核心搜索服务架构重构，服务1000万+日活用户\n- **通过缓存优化和查询重构降低API延迟45%**\n- 指导4名初级工程师，完成50+技术面试\n- 推动gRPC微服务落地，服务间通信效率提升30%"
+            },
+            {
+              id: "e4",
+              company: "阿里巴巴集团",
+              position: "高级工程师",
+              location: "杭州",
+              duration: "2018.07 - 2021.02",
+              description: "- 构建支付处理微服务，年处理200亿+交易额\n- **系统可靠性提升至99.99%可用性**，零停机部署\n- 主导从单体架构到事件驱动微服务架构的迁移\n- 设计实时欺诈检测系统，误报率降低60%"
+            },
+            {
+              id: "e4b",
+              company: "腾讯科技",
+              position: "工程师",
+              location: "深圳",
+              duration: "2016.06 - 2018.06",
+              description: "- 开发CRM仪表板功能，服务50万+企业用户\n- **使用虚拟滚动优化数据可视化渲染速度3倍**\n- 与UX团队合作重新设计分析模块"
+            }
+          ]
+        },
+        {
+          id: "s3",
+          type: "projects",
+          entries: [
+            {
+              id: "e5",
+              name: "云同步协作平台",
+              institution: "字节跳动",
+              role: "技术负责人",
+              duration: "2023.01 - 至今",
+              tags: ["React", "Go", "Kubernetes", "gRPC", "PostgreSQL"],
+              description: "- 设计基于操作变换的协作文档实时同步引擎\n- **P99延迟低于100ms下支持5万并发连接**\n- 实现端到端加密，确保零知识架构\n- 构建自动扩缩容基础设施，运营成本降低40%"
+            },
+            {
+              id: "e6",
+              name: "数据流处理SDK",
+              institution: "阿里巴巴",
+              role: "核心贡献者",
+              duration: "2020.06 - 2022.12",
+              tags: ["Python", "Apache Kafka", "Redis", "Docker"],
+              description: "- 构建被15个团队200+内部服务采用的SDK\n- **通过声明式配置将数据管道搭建时间减少70%**\n- 实现精确一次语义，消息投递保证达99.95%"
+            },
+            {
+              id: "e6b",
+              name: "智能分析仪表板",
+              institution: "腾讯",
+              role: "前端负责人",
+              duration: "2017.09 - 2019.05",
+              tags: ["Vue.js", "D3.js", "GraphQL", "WebSocket"],
+              description: "- 构建30+图表类型的交互式分析仪表板\n- **通过代码分割和懒加载将首屏加载从8秒降至1.2秒**\n- 实现带WebSocket降级的实时数据流"
+            }
+          ]
+        },
+        {
+          id: "s4",
+          type: "awards",
+          entries: [
+            { id: "e7", title: "最佳创新奖", issuer: "字节跳动年度技术奖", date: "2023.05" },
+            { id: "e8", title: "黑客马拉松冠军", issuer: "阿里云开发者大会", date: "2022.09" },
+            { id: "e8b", title: "杰出工程师", issuer: "腾讯技术突破奖", date: "2020.12" }
+          ]
+        },
+        {
+          id: "s5",
+          type: "certifications",
+          entries: [
+            { id: "e9", name: "AWS解决方案架构师专业级", issuer: "Amazon Web Services", date: "2023.03" },
+            { id: "e10", name: "Kubernetes管理员认证", issuer: "Cloud Native Computing Foundation", date: "2022.11" },
+            { id: "e10b", name: "Google Cloud专业数据工程师", issuer: "Google Cloud", date: "2021.08" }
+          ]
+        },
+        {
+          id: "s6",
+          type: "skills",
+          entries: [
+            { id: "e11", category: "前端开发", tags: ["React", "Vue.js", "TypeScript", "Tailwind CSS", "Next.js", "Webpack"] },
+            { id: "e12", category: "后端开发", tags: ["Node.js", "Go", "Python", "PostgreSQL", "Redis", "GraphQL"] },
+            { id: "e13", category: "运维与云", tags: ["Docker", "Kubernetes", "AWS", "Terraform", "CI/CD", "Prometheus"] },
+            { id: "e13b", category: "测试与质量", tags: ["Jest", "Cypress", "Playwright", "TDD", "Load Testing"] }
+          ]
+        },
+        {
+          id: "s7",
+          type: "languages",
+          entries: [
+            { id: "e14", language: "英语", fluency: "母语/双语" },
+            { id: "e15", language: "普通话", fluency: "母语" },
+            { id: "e16", language: "日语", fluency: "日常会话（JLPT N2）" },
+            { id: "e16b", language: "西班牙语", fluency: "基础" }
+          ]
+        }
+      ]
+    };
+
+    // Map to organize the const variables by locale
+    const sampleDataMap = {
+      "en-US": sampleDataEnUS,
+      "zh-CN": sampleDataZhCN
+    };
+
+    function getSampleData(loc) {
+      return sampleDataMap[loc];
+    }
+
+
+    let resumeData = {
+      profile: {
+        fullName: "",
+        position: "",
+        email: "",
+        phone: "",
+        location: "",
+        website: "",
+        summary: "",
+      },
+      sections: [],
+    };
+    let uiState = { editorOpen: false, settingsOpen: false };
+    let settings = { ...DEFAULT_SETTINGS };
+    let modalCallback = null,
+      addListOpen = false,
+      editorListenersReady = false;
+
+    function saveData() {
+      const d = JSON.parse(JSON.stringify(resumeData));
+      d.sections.forEach((s) => {
+        delete s.collapsed;
+        delete s.visible;
+      });
+      localStorage.setItem(STORAGE_KEYS.data, JSON.stringify(d));
+    }
+    function loadData() {
+      try {
+        const d = JSON.parse(localStorage.getItem(STORAGE_KEYS.data));
+        if (d) {
+          resumeData.profile = { ...resumeData.profile, ...d.profile };
+          resumeData.sections = (d.sections || []).map((s) => ({
+            ...s,
+            collapsed: s.collapsed || false,
+            visible: s.visible !== false,
+          }));
+        }
+      } catch (e) { }
+    }
+    function saveUI() {
+      localStorage.setItem(STORAGE_KEYS.ui, JSON.stringify(uiState));
+    }
+    function loadUI() {
+      try {
+        const u = JSON.parse(localStorage.getItem(STORAGE_KEYS.ui));
+        if (u) uiState = { ...uiState, ...u };
+      } catch (e) { }
+    }
+    function saveSettings() {
+      localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
+    }
+    function loadSettings() {
+      try {
+        const s = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings));
+        if (s)
+          settings = {
+            ...settings,
+            ...s,
+            watermark: { ...settings.watermark, ...s.watermark },
+            padding: { ...settings.padding, ...s.padding },
+            typography: { ...settings.typography, ...s.typography },
+            spacing: { ...settings.spacing, ...s.spacing },
+          };
+      } catch (e) { }
+    }
+    function detectSystemTheme() {
+      return window.matchMedia("(prefers-color-scheme:dark)").matches
+        ? "dark"
+        : "light";
+    }
+    function detectSystemLocale() {
+      return navigator.language.startsWith("zh") ? "zh-CN" : "en-US";
+    }
+    function applyTheme() {
+      document.documentElement.classList.toggle(
+        "dark",
+        settings.theme === "dark",
+      );
+      document.documentElement.style.setProperty(
+        "--accent-color",
+        settings.theme === "dark" ? "#2dd4bf" : "#6366f1",
+      );
+      document.getElementById("theme-btn").innerHTML =
+        settings.theme === "dark"
+          ? '<i data-lucide="moon" style="width:16px;height:16px"></i>'
+          : '<i data-lucide="sun" style="width:16px;height:16px"></i>';
+      lucide.createIcons();
+    }
+    function applyLocale() {
+      document.getElementById("lang-btn").textContent =
+        settings.locale === "zh-CN" ? "简体中文" : "English";
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const k = el.getAttribute("data-i18n");
+        if (t(k) !== k) el.textContent = t(k);
+      });
+    }
+    function notify(type, msg) {
+      const c = document.getElementById("notif-container");
+      const icons = {
+        success: "circle-check",
+        error: "circle-x",
+        info: "circle-info",
+        warning: "triangle-alert",
+      };
+      const colors = {
+        success: "#22c55e",
+        error: "#ef4444",
+        info: "#3b82f6",
+        warning: "#f59e0b",
+      };
+      const el = document.createElement("div");
+      el.className = "notif";
+      el.innerHTML = `<i data-lucide="${icons[type] || "circle-info"}" style="width:16px;height:16px;flex-shrink:0;color:${colors[type] || colors.info}"></i><span style="flex:1">${msg}</span>`;
+      c.appendChild(el);
+      lucide.createIcons();
+      setTimeout(() => {
+        el.classList.add("out");
+        setTimeout(() => el.remove(), 300);
+      }, 3500);
+    }
+    function showModal(title, body, confirmText, cb) {
+      document.getElementById("modal-title").textContent = t("warning");
+      document.getElementById("modal-body").innerHTML = body;
+      document.getElementById("modal-confirm").textContent =
+        confirmText || t("confirm");
+      modalCallback = cb;
+      document.getElementById("modal-overlay").classList.add("open");
+      lucide.createIcons();
+    }
+    function hideModal() {
+      document.getElementById("modal-overlay").classList.remove("open");
+      modalCallback = null;
+    }
+    function modalConfirmAction() {
+      if (modalCallback) modalCallback();
+      hideModal();
+    }
+
+    function toggleEditor() {
+      uiState.editorOpen = !uiState.editorOpen;
+      if (uiState.editorOpen) {
+        uiState.settingsOpen = false;
+        document.getElementById("settings-panel").classList.remove("open");
+      }
+      document
+        .getElementById("editor-panel")
+        .classList.toggle("open", uiState.editorOpen);
+      saveUI();
+    }
+    function toggleSettings() {
+      uiState.settingsOpen = !uiState.settingsOpen;
+      if (uiState.settingsOpen) {
+        uiState.editorOpen = false;
+        document.getElementById("editor-panel").classList.remove("open");
+      }
+      document
+        .getElementById("settings-panel")
+        .classList.toggle("open", uiState.settingsOpen);
+      saveUI();
+      renderSettings();
+    }
+    function flipToSettings() {
+      uiState.editorOpen = false;
+      uiState.settingsOpen = true;
+      document.getElementById("editor-panel").classList.remove("open");
+      document.getElementById("settings-panel").classList.add("open");
+      saveUI();
+      renderSettings();
+    }
+    function flipToEditor() {
+      uiState.settingsOpen = false;
+      uiState.editorOpen = true;
+      document.getElementById("settings-panel").classList.remove("open");
+      document.getElementById("editor-panel").classList.add("open");
+      saveUI();
+      renderEditor();
+    }
+
+    function renderEditor() {
+      addListOpen = false;
+      const body = document.getElementById("editor-body");
+      let html =
+        '<div class="section-box mb-3" style="background:hsl(var(--card))"><div class="section-header" style="cursor:default"><div class="flex items-center gap-2"><i data-lucide="user" style="width:14px;height:14px;color:var(--accent-color)"></i><span class="font-semibold text-xs">' +
+        t("profile") +
+        '</span></div></div><div class="p-2 space-y-2">';
+      html +=
+        fh("profile", "fullName", "text") +
+        fh("profile", "position", "text") +
+        '<div class="grid grid-cols-2 gap-2">' +
+        fh("profile", "email", "text") +
+        fh("profile", "phone", "text") +
+        fh("profile", "location", "text") +
+        fh("profile", "website", "text") +
+        "</div>" +
+        fh("profile", "summary", "textarea") +
+        "</div></div>";
+      resumeData.sections.forEach((sec) => {
+        const def = SECTION_DEFS[sec.type] || {};
+        const icon = def.icon || "folder";
+        const ec = (sec.entries || []).length;
+        html += `<div class="section-box" data-section-id="${sec.id}"><div class="section-header" draggable="true" data-drag-section="${sec.id}"><div class="flex items-center gap-2">`;
+        html += `<button class="btn-icon p-0.5" draggable="false" data-action="toggle-collapse" data-sec="${sec.id}"><i data-lucide="${sec.collapsed ? "chevron-right" : "chevron-down"}" style="width:12px;height:12px"></i></button>`;
+        html += `<i data-lucide="${icon}" style="width:14px;height:14px;color:var(--accent-color)"></i>`;
+        html += `<span class="font-semibold text-xs">${t(sec.type)}</span><span class="text-[10px] rounded-full px-1.5 py-0.5 text-white" style="background:var(--accent-color)">${ec}</span></div><div class="flex items-center gap-1">`;
+        html += `<button class="btn-icon btn-accent p-1" draggable="false" data-action="add-entry" data-sec="${sec.id}"><i data-lucide="plus" style="width:13px;height:13px"></i></button>`;
+        html += `<button class="btn-icon btn-accent p-1" draggable="false" data-action="toggle-visibility" data-sec="${sec.id}"><i data-lucide="${sec.visible ? "eye" : "eye-off"}" style="width:13px;height:13px"></i></button>`;
+        html += `<button class="btn-icon btn-danger p-1" draggable="false" data-action="remove-section" data-sec="${sec.id}"><i data-lucide="x" style="width:13px;height:13px"></i></button></div></div>`;
+        if (!sec.collapsed) {
+          html += `<div class="section-body">`;
+          (sec.entries || []).forEach((entry, ei) => {
+            const kf = def.keyField;
+            const kv = entry[kf] || entry.id.slice(-6);
+            html += `<div class="entry-card" data-entry-id="${entry.id}"><div class="entry-header"><div class="flex items-center gap-2">`;
+            html += `<button class="btn-icon p-0.5" draggable="false" data-action="toggle-entry-collapse" data-sec="${sec.id}" data-entry="${entry.id}"><i data-lucide="${entry._collapsed ? "chevron-right" : "chevron-down"}" style="width:11px;height:11px"></i></button>`;
+            html += `<span class="text-xs" style="color:hsl(var(--muted-fg))" data-key-display="${entry.id}">${escHTML(kv)}</span></div><div class="flex items-center gap-1">`;
+            if (ei > 0)
+              html += `<button class="btn-icon btn-accent p-0.5" draggable="false" data-action="move-entry" data-sec="${sec.id}" data-entry="${entry.id}" data-dir="-1"><i data-lucide="arrow-up" style="width:12px;height:12px"></i></button>`;
+            if (ei < sec.entries.length - 1)
+              html += `<button class="btn-icon btn-accent p-0.5" draggable="false" data-action="move-entry" data-sec="${sec.id}" data-entry="${entry.id}" data-dir="1"><i data-lucide="arrow-down" style="width:12px;height:12px"></i></button>`;
+            html += `<button class="btn-icon btn-danger p-0.5" draggable="false" data-action="remove-entry" data-sec="${sec.id}" data-entry="${entry.id}"><i data-lucide="trash-2" style="width:12px;height:12px"></i></button></div></div>`;
+            if (!entry._collapsed) {
+              html += `<div class="p-2 space-y-2">`;
+              (def.fields || []).forEach((f) => {
+                if (f.type === "duration")
+                  html += dfh(sec.id, entry.id, f.key, entry[f.key]);
+                else if (f.type === "tags")
+                  html += tfh(sec.id, entry.id, f.key, entry[f.key] || []);
+                else html += fh("entry", f.key, f.type, sec.id, entry.id);
+              });
+              html += `</div>`;
+            }
+            html += `</div>`;
+          });
+          html += `</div>`;
+        }
+        html += `</div>`;
+      });
+      body.innerHTML = html;
+      const sl = document.getElementById("add-section-list");
+      let slh = "";
+      Object.keys(SECTION_DEFS).forEach((type) => {
+        const added = resumeData.sections.some((s) => s.type === type);
+        slh += `<div class="add-section-item${added ? " disabled" : ""}" data-action="add-section-type" data-type="${type}"><i data-lucide="${SECTION_DEFS[type].icon}" style="width:14px;height:14px"></i><span class="flex-1">${t(type)}</span>${added ? '<i data-lucide="check" style="width:14px;height:14px;color:var(--accent-color)"></i>' : ""}</div>`;
+      });
+      sl.innerHTML = slh;
+      sl.classList.remove("open");
+      document.getElementById("editor-footer").innerHTML =
+        `<button class="editor-footer-btn" onclick="triggerImport()"><i data-lucide="file-output" style="width:12px;height:12px"></i><span>${t("import")}</span></button><button class="editor-footer-btn" onclick="exportData()"><i data-lucide="file-input" style="width:12px;height:12px"></i><span>${t("export")}</span></button><button class="editor-footer-btn" onclick="confirmLoadSample()"><i data-lucide="database-zap" style="width:12px;height:12px"></i><span>${t("load")}</span></button><button class="editor-footer-btn" onclick="toggleAddSectionList()"><i data-lucide="plus" style="width:12px;height:12px"></i><span>${t("addSection")}</span></button>`;
+      lucide.createIcons();
+      renderPreview();
+    }
+
+    function fh(prefix, key, type, secId, entryId) {
+      const isP = prefix === "profile";
+      const val = isP
+        ? resumeData.profile[key] || ""
+        : gef(secId, entryId, key);
+      const ph = t("ph_" + key) || "";
+      const label = t(key) || key;
+      if (type === "textarea")
+        return `<fieldset class="fieldset-outline"><legend>${label}</legend><textarea data-field="${key}" ${isP ? 'data-profile="1"' : `data-sec="${secId}" data-entry="${entryId}"`} placeholder="${ph}" rows="3">${escHTML(val)}</textarea></fieldset>`;
+      return `<fieldset class="fieldset-outline"><legend>${label}</legend><input type="text" data-field="${key}" ${isP ? 'data-profile="1"' : `data-sec="${secId}" data-entry="${entryId}"`} placeholder="${ph}" value="${escAttr(val)}"></fieldset>`;
+    }
+    function dfh(secId, entryId, key, val) {
+      const parts = (val || "").split(" - ");
+      const from = parts[0] || "";
+      const to = parts[1] || "";
+      const label = t("duration") || "Duration";
+      return `<fieldset class="fieldset-outline"><legend>${label}</legend><div class="flex items-center gap-1"><input type="text" data-field="${key}" data-part="from" data-sec="${secId}" data-entry="${entryId}" placeholder="${t("ph_durationFrom")}" value="${escAttr(from)}" class="flex-1" style="min-width:0"><span class="text-gray-400 text-xs flex-shrink-0">-</span><input type="text" data-field="${key}" data-part="to" data-sec="${secId}" data-entry="${entryId}" placeholder="${t("ph_durationTo")}" value="${escAttr(to)}" class="flex-1" style="min-width:0"></div></fieldset>`;
+    }
+    function tfh(secId, entryId, key, tags) {
+      const label = t("tags") || "Tags";
+      let chips = (tags || [])
+        .map(
+          (tag, i) =>
+            `<span class="tag-chip" draggable="true" data-drag-tag="${secId}|${entryId}|${key}|${i}">${escHTML(tag)}<button draggable="false" data-action="remove-tag" data-sec="${secId}" data-entry="${entryId}" data-field="${key}" data-idx="${i}">&times;</button></span>`,
+        )
+        .join("");
+      return `<fieldset class="fieldset-outline"><legend>${label}</legend><div class="flex flex-wrap gap-1 items-center tags-display">${chips}<input type="text" data-field="${key}" data-sec="${secId}" data-entry="${entryId}" data-tags-input="1" placeholder="${t("ph_tags")}" class="flex-1 min-w-[60px]" style="font-size:0.75rem"></div></fieldset>`;
+    }
+    function gef(secId, entryId, key) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      if (!sec) return "";
+      const entry = (sec.entries || []).find((e) => e.id === entryId);
+      return entry ? entry[key] || "" : "";
+    }
+
+    function attachEditorEventsOnce() {
+      if (editorListenersReady) return;
+      editorListenersReady = true;
+      const body = document.getElementById("editor-body");
+      const sl = document.getElementById("add-section-list");
+      sl.addEventListener("click", (e) => {
+        const item = e.target.closest(
+          '[data-action="add-section-type"]:not(.disabled)',
+        );
+        if (item) addSection(item.dataset.type);
+      });
+      body.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-action]");
+        if (!btn) return;
+        const a = btn.dataset.action;
+        if (a === "toggle-collapse") toggleCollapse(btn.dataset.sec);
+        else if (a === "toggle-entry-collapse")
+          toggleEntryCollapse(btn.dataset.sec, btn.dataset.entry);
+        else if (a === "add-entry") addEntry(btn.dataset.sec);
+        else if (a === "toggle-visibility")
+          toggleSectionVisibility(btn.dataset.sec);
+        else if (a === "remove-section")
+          confirmRemoveSection(btn.dataset.sec);
+        else if (a === "remove-entry")
+          confirmRemoveEntry(btn.dataset.sec, btn.dataset.entry);
+        else if (a === "move-entry")
+          moveEntry(
+            btn.dataset.sec,
+            btn.dataset.entry,
+            parseInt(btn.dataset.dir),
+          );
+        else if (a === "remove-tag")
+          removeTag(
+            btn.dataset.sec,
+            btn.dataset.entry,
+            btn.dataset.field,
+            parseInt(btn.dataset.idx),
+          );
+      });
+      body.addEventListener("input", (e) => {
+        const el = e.target;
+        if (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA") return;
+        const field = el.dataset.field;
+        if (!field) return;
+        if (el.dataset.profile) {
+          resumeData.profile[field] = el.value;
+        } else if (el.dataset.sec && el.dataset.entry) {
+          const sec = resumeData.sections.find(
+            (s) => s.id === el.dataset.sec,
+          );
+          const entry = sec?.entries?.find(
+            (en) => en.id === el.dataset.entry,
+          );
+          if (entry) {
+            if (el.dataset.part) {
+              const other = el.dataset.part === "from" ? "to" : "from";
+              const otherEl = body.querySelector(
+                `input[data-field="${field}"][data-part="${other}"][data-entry="${el.dataset.entry}"]`,
+              );
+              const fv =
+                el.dataset.part === "from" ? el.value : otherEl?.value || "";
+              const tv =
+                el.dataset.part === "to" ? el.value : otherEl?.value || "";
+              entry[field] = fv || tv ? `${fv} - ${tv}` : "";
+            } else if (!el.dataset.tagsInput) {
+              entry[field] = el.value;
+              const def = SECTION_DEFS[sec.type];
+              if (def && field === def.keyField) {
+                const d = body.querySelector(
+                  `[data-key-display="${el.dataset.entry}"]`,
+                );
+                if (d) d.textContent = el.value || el.dataset.entry.slice(-6);
+              }
+            }
+          }
+        }
+        saveData();
+        debouncePreview();
+      });
+      body.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && e.target.dataset.tagsInput) {
+          e.preventDefault();
+          const val = e.target.value.trim();
+          if (!val) return;
+          const sec = resumeData.sections.find(
+            (s) => s.id === e.target.dataset.sec,
+          );
+          const entry = sec?.entries?.find(
+            (en) => en.id === e.target.dataset.entry,
+          );
+          if (entry) {
+            if (!entry[e.target.dataset.field])
+              entry[e.target.dataset.field] = [];
+            entry[e.target.dataset.field].push(val);
+            e.target.value = "";
+            saveData();
+            renderEditor();
+          }
+        }
+      });
+      let dragType = null;
+      body.addEventListener("dragstart", (e) => {
+        if (e.target.closest("[data-action]")) return;
+        const tagChip = e.target.closest("[data-drag-tag]");
+        if (tagChip) {
+          e.stopPropagation();
+          dragType = "tag";
+          e.dataTransfer.setData("text/tag", tagChip.dataset.dragTag);
+          tagChip.classList.add("dragging");
+          return;
+        }
+        const hdr = e.target.closest("[data-drag-section]");
+        if (!hdr) return;
+        dragType = "section";
+        e.dataTransfer.setData("text/section", hdr.dataset.dragSection);
+        hdr.closest(".section-box").classList.add("dragging");
+      });
+      body.addEventListener("dragend", (e) => {
+        body
+          .querySelectorAll(".section-box.dragging,.tag-chip.dragging")
+          .forEach((el) => el.classList.remove("dragging"));
+        body
+          .querySelectorAll(
+            ".drag-over-top,.drag-over-bottom,.tag-chip.drag-over",
+          )
+          .forEach((el) =>
+            el.classList.remove(
+              "drag-over-top",
+              "drag-over-bottom",
+              "drag-over",
+            ),
+          );
+        dragType = null;
+      });
+      body.addEventListener("dragover", (e) => {
+        if (dragType === "section") {
+          const box = e.target.closest(".section-box[data-section-id]");
+          if (!box) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          body
+            .querySelectorAll(".drag-over-top,.drag-over-bottom")
+            .forEach((el) =>
+              el.classList.remove("drag-over-top", "drag-over-bottom"),
+            );
+          const r = box.getBoundingClientRect();
+          box.classList.add(
+            e.clientY < r.top + r.height / 2
+              ? "drag-over-top"
+              : "drag-over-bottom",
+          );
+        } else if (dragType === "tag") {
+          const chip = e.target.closest("[data-drag-tag]");
+          if (!chip) return;
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = "move";
+          body
+            .querySelectorAll(".tag-chip.drag-over")
+            .forEach((c) => c.classList.remove("drag-over"));
+          chip.classList.add("drag-over");
+        }
+      });
+      body.addEventListener("dragleave", (e) => {
+        if (dragType === "section") {
+          const box = e.target.closest(".section-box[data-section-id]");
+          if (box) box.classList.remove("drag-over-top", "drag-over-bottom");
+        } else if (dragType === "tag") {
+          const chip = e.target.closest("[data-drag-tag]");
+          if (chip) chip.classList.remove("drag-over");
+        }
+      });
+      body.addEventListener("drop", (e) => {
+        if (dragType === "section") {
+          const box = e.target.closest(".section-box[data-section-id]");
+          if (!box) return;
+          e.preventDefault();
+          e.stopPropagation();
+          box.classList.remove("drag-over-top", "drag-over-bottom");
+          const fromId = e.dataTransfer.getData("text/section");
+          if (!fromId) return;
+          const toId = box.dataset.sectionId;
+          if (fromId === toId) return;
+          const fi = resumeData.sections.findIndex((s) => s.id === fromId);
+          const ti = resumeData.sections.findIndex((s) => s.id === toId);
+          if (fi < 0 || ti < 0) return;
+          const r = box.getBoundingClientRect();
+          const insB = e.clientY < r.top + r.height / 2;
+          const [item] = resumeData.sections.splice(fi, 1);
+          let ni = resumeData.sections.findIndex((s) => s.id === toId);
+          if (!insB) ni++;
+          resumeData.sections.splice(ni, 0, item);
+          saveData();
+          renderEditor();
+        } else if (dragType === "tag") {
+          const chip = e.target.closest("[data-drag-tag]");
+          if (!chip) return;
+          e.preventDefault();
+          e.stopPropagation();
+          chip.classList.remove("drag-over");
+          const fi = e.dataTransfer.getData("text/tag");
+          if (!fi) return;
+          const ti = chip.dataset.dragTag;
+          const [fS, fE, fF, fI] = fi.split("|");
+          const [tS, tE, tF, tI] = ti.split("|");
+          if (fS !== tS || fE !== tE || fF !== tF) return;
+          const sec = resumeData.sections.find((s) => s.id === fS);
+          const entry = sec?.entries?.find((en) => en.id === fE);
+          if (entry && entry[fF]) {
+            const arr = entry[fF];
+            const a = parseInt(fI),
+              b = parseInt(tI);
+            const [it] = arr.splice(a, 1);
+            arr.splice(b, 0, it);
+            saveData();
+            renderEditor();
+          }
+        }
+      });
+      let touchType = null,
+        touchInfo = null,
+        touchGhost = null;
+      body.addEventListener(
+        "touchstart",
+        (e) => {
+          if (e.touches.length !== 1) return;
+          const tagChip = e.target.closest("[data-drag-tag]");
+          if (tagChip && !e.target.closest("button")) {
+            touchType = "tag";
+            touchInfo = tagChip.dataset.dragTag;
+            return;
+          }
+          const hdr = e.target.closest("[data-drag-section]");
+          if (hdr && !e.target.closest("[data-action]")) {
+            touchType = "section";
+            touchInfo = hdr.dataset.dragSection;
+          }
+        },
+        { passive: true },
+      );
+      body.addEventListener(
+        "touchmove",
+        (e) => {
+          if (!touchType) return;
+          e.preventDefault();
+          const tch = e.touches[0];
+          if (!touchGhost) {
+            if (touchType === "tag") {
+              const src = body.querySelector(
+                `[data-drag-tag="${touchInfo}"]`,
+              );
+              if (src) src.classList.add("dragging");
+              touchGhost = document.createElement("div");
+              touchGhost.className = "touch-drag-ghost";
+              touchGhost.style.fontSize = "0.75rem";
+              touchGhost.style.padding = "4px 12px";
+              if (src)
+                touchGhost.textContent = src.textContent.replace("×", "");
+              document.body.appendChild(touchGhost);
+            } else if (touchType === "section") {
+              const box = body.querySelector(
+                `[data-section-id="${touchInfo}"]`,
+              );
+              if (!box) return;
+              box.classList.add("dragging");
+              const r = box.getBoundingClientRect();
+              touchGhost = document.createElement("div");
+              touchGhost.className = "touch-drag-ghost";
+              touchGhost.style.width = r.width + "px";
+              touchGhost.innerHTML =
+                box.querySelector(".section-header").innerHTML;
+              document.body.appendChild(touchGhost);
+            }
+          }
+          touchGhost.style.left = tch.clientX - 60 + "px";
+          touchGhost.style.top = tch.clientY - 20 + "px";
+          if (touchType === "section") {
+            body
+              .querySelectorAll(".section-box[data-section-id]")
+              .forEach((b) => {
+                b.classList.remove("drag-over-top", "drag-over-bottom");
+                const r = b.getBoundingClientRect();
+                if (tch.clientY > r.top && tch.clientY < r.bottom)
+                  b.classList.add(
+                    tch.clientY < r.top + r.height / 2
+                      ? "drag-over-top"
+                      : "drag-over-bottom",
+                  );
+              });
+          } else if (touchType === "tag") {
+            body.querySelectorAll("[data-drag-tag]").forEach((c) => {
+              c.classList.remove("drag-over");
+              const r = c.getBoundingClientRect();
+              if (
+                tch.clientX > r.left &&
+                tch.clientX < r.right &&
+                tch.clientY > r.top &&
+                tch.clientY < r.bottom &&
+                c.dataset.dragTag !== touchInfo
+              )
+                c.classList.add("drag-over");
+            });
+          }
+        },
+        { passive: false },
+      );
+      body.addEventListener("touchend", (e) => {
+        if (!touchType) return;
+        if (touchGhost) {
+          document.body.removeChild(touchGhost);
+          touchGhost = null;
+        }
+        if (touchType === "section") {
+          body
+            .querySelectorAll(".section-box[data-section-id]")
+            .forEach((b) => {
+              b.classList.remove("dragging");
+              if (
+                b.classList.contains("drag-over-top") ||
+                b.classList.contains("drag-over-bottom")
+              ) {
+                const toId = b.dataset.sectionId;
+                const fi = resumeData.sections.findIndex(
+                  (s) => s.id === touchInfo,
+                );
+                if (fi < 0) return;
+                const r = b.getBoundingClientRect();
+                const insB =
+                  e.changedTouches[0]?.clientY < r.top + r.height / 2;
+                const [item] = resumeData.sections.splice(fi, 1);
+                let ni = resumeData.sections.findIndex((s) => s.id === toId);
+                if (!insB) ni++;
+                resumeData.sections.splice(ni, 0, item);
+                saveData();
+                renderEditor();
+              }
+              b.classList.remove("drag-over-top", "drag-over-bottom");
+            });
+        } else if (touchType === "tag") {
+          body.querySelectorAll("[data-drag-tag]").forEach((c) => {
+            c.classList.remove("dragging");
+            if (c.classList.contains("drag-over")) {
+              c.classList.remove("drag-over");
+              const fi = touchInfo;
+              const ti = c.dataset.dragTag;
+              const [fS, fE, fF, fI] = fi.split("|");
+              const [tS, tE, tF, tI] = ti.split("|");
+              if (fS === tS && fE === tE && fF === tF) {
+                const sec = resumeData.sections.find((s) => s.id === fS);
+                const entry = sec?.entries?.find((en) => en.id === fE);
+                if (entry && entry[fF]) {
+                  const arr = entry[fF];
+                  const a = parseInt(fI),
+                    b = parseInt(tI);
+                  const [it] = arr.splice(a, 1);
+                  arr.splice(b, 0, it);
+                  saveData();
+                  renderEditor();
+                }
+              }
+            }
+          });
+        }
+        touchType = null;
+        touchInfo = null;
+      });
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!addListOpen) return;
+      const sl = document.getElementById("add-section-list");
+      const ef = document.getElementById("editor-footer");
+      if (sl && ef && !sl.contains(e.target) && !ef.contains(e.target)) {
+        addListOpen = false;
+        sl.classList.remove("open");
+      }
+    });
+    let previewTimer = null;
+    function debouncePreview() {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(renderPreview, 200);
+    }
+    function toggleCollapse(secId) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      if (sec) {
+        sec.collapsed = !sec.collapsed;
+        saveData();
+        renderEditor();
+      }
+    }
+    function toggleEntryCollapse(secId, entryId) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      const entry = sec?.entries?.find((e) => e.id === entryId);
+      if (entry) {
+        entry._collapsed = !entry._collapsed;
+        renderEditor();
+      }
+    }
+    function toggleSectionVisibility(secId) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      if (sec) {
+        sec.visible = !sec.visible;
+        saveData();
+        renderEditor();
+      }
+    }
+    function addEntry(secId) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      if (sec) {
+        if (!sec.entries) sec.entries = [];
+        sec.entries.push({ id: genId() });
+        saveData();
+        renderEditor();
+        notify(
+          "success",
+          t("notify_entryAdded").replace("{section}", t(sec.type)),
+        );
+      }
+    }
+    function moveEntry(secId, entryId, dir) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      if (!sec) return;
+      const idx = sec.entries.findIndex((e) => e.id === entryId);
+      const ni = idx + dir;
+      if (ni < 0 || ni >= sec.entries.length) return;
+      [sec.entries[idx], sec.entries[ni]] = [
+        sec.entries[ni],
+        sec.entries[idx],
+      ];
+      saveData();
+      renderEditor();
+    }
+    function removeTag(secId, entryId, field, idx) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      const entry = sec?.entries?.find((e) => e.id === entryId);
+      if (entry && entry[field]) {
+        entry[field].splice(idx, 1);
+        saveData();
+        renderEditor();
+      }
+    }
+    function addSection(type) {
+      const existing = resumeData.sections.find((s) => s.type === type);
+      if (existing) {
+        notify("info", t(type) + " " + t("added"));
+        return;
+      }
+      resumeData.sections.push({
+        id: genId(),
+        type,
+        collapsed: false,
+        visible: true,
+        entries: [{ id: genId() }],
+      });
+      saveData();
+      renderEditor();
+      notify(
+        "success",
+        t("notify_sectionAdded").replace("{section}", t(type)),
+      );
+    }
+    function confirmRemoveSection(secId) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      if (!sec) return;
+      showModal(
+        t("modal_removeSectionTitle"),
+        t("modal_removeSectionBody").replace("{section}", t(sec.type)),
+        t("confirm"),
+        () => {
+          resumeData.sections = resumeData.sections.filter(
+            (s) => s.id !== secId,
+          );
+          saveData();
+          renderEditor();
+          notify(
+            "success",
+            t("notify_sectionRemoved").replace("{section}", t(sec.type)),
+          );
+        },
+      );
+    }
+    function confirmRemoveEntry(secId, entryId) {
+      const sec = resumeData.sections.find((s) => s.id === secId);
+      const entry = sec?.entries?.find((e) => e.id === entryId);
+      if (!sec || !entry) return;
+      const def = SECTION_DEFS[sec.type];
+      const kv = entry[def?.keyField] || entryId.slice(-6);
+      showModal(
+        t("modal_removeEntryTitle"),
+        t("modal_removeEntryBody")
+          .replace("{key}", kv)
+          .replace("{section}", t(sec.type)),
+        t("confirm"),
+        () => {
+          sec.entries = sec.entries.filter((e) => e.id !== entryId);
+          saveData();
+          renderEditor();
+          notify(
+            "success",
+            t("notify_entryRemoved")
+              .replace("{key}", kv)
+              .replace("{section}", t(sec.type)),
+          );
+        },
+      );
+    }
+    function confirmClear() {
+      showModal(
+        t("modal_clearTitle"),
+        t("modal_clearBody"),
+        t("confirm"),
+        () => {
+          resumeData = {
+            profile: {
+              fullName: "",
+              position: "",
+              email: "",
+              phone: "",
+              location: "",
+              website: "",
+              summary: "",
+            },
+            sections: [],
+          };
+          saveData();
+          renderEditor();
+          notify("success", t("notify_cleared"));
+        },
+      );
+    }
+    function confirmLoadSample() {
+      showModal(
+        t("modal_loadTitle"),
+        t("modal_loadBody"),
+        t("confirm"),
+        () => {
+          resumeData = getSampleData(settings.locale);
+          saveData();
+          renderEditor();
+          notify("success", t("notify_loaded"));
+        },
+      );
+    }
+    function confirmResetSettings() {
+      showModal(
+        t("modal_resetTitle"),
+        t("modal_resetBody"),
+        t("confirm"),
+        () => {
+          settings = {
+            ...JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
+            theme: settings.theme,
+            locale: settings.locale,
+          };
+          saveSettings();
+          renderSettings();
+          renderPreview();
+          notify("success", t("notify_reset"));
+        },
+      );
+    }
+    function toggleAddSectionList() {
+      addListOpen = !addListOpen;
+      document
+        .getElementById("add-section-list")
+        .classList.toggle("open", addListOpen);
+    }
+    function triggerImport() {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            showImportModal(JSON.parse(ev.target.result), file.name);
+          } catch (err) {
+            notify("error", "Invalid JSON file");
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    function showImportModal(json, fileName) {
+      const validation = validateImportData(json);
+      let bh = `<div class="mb-2 p-2 rounded" style="background:#fef3c7;color:#92400e;font-size:0.6875rem">${t("val_warning")}</div>`;
+      bh += `<div style="max-height:45vh;overflow-y:auto"><table class="validation-table"><thead><tr><th>${t("val_section")}</th><th>${t("val_key")}</th><th>${t("val_state")}</th></tr></thead><tbody>`;
+      validation.forEach((row) => {
+        const si =
+          row.state === "all"
+            ? "circle-check"
+            : row.state === "partial"
+              ? "circle-alert"
+              : "circle-x";
+        const sc =
+          row.state === "all"
+            ? "#22c55e"
+            : row.state === "partial"
+              ? "#f59e0b"
+              : "#ef4444";
+        const st =
+          row.state === "all"
+            ? t("val_allMatched")
+            : row.state === "partial"
+              ? t("val_partial")
+              : t("val_ignored");
+        bh += `<tr><td>${escHTML(row.section)}</td><td>${escHTML(row.key) || "-"}</td><td><span class="inline-flex items-center gap-1"><i data-lucide="${si}" style="width:13px;height:13px;color:${sc}"></i>${st}</span></td></tr>`;
+      });
+      bh += `</tbody></table></div>`;
+      showModal(t("modal_importTitle"), bh, t("confirm"), () => {
+        try {
+          applyImportData(json);
+          saveData();
+          renderEditor();
+          notify("success", t("notify_imported").replace("{file}", fileName));
+        } catch (e) {
+          console.error(e);
+          notify("error", t("notify_failed"));
+        }
+      });
+    }
+    function validateImportData(json) {
+      const results = [];
+      if (json.profile) {
+        const pf = [
+          "fullName",
+          "position",
+          "email",
+          "phone",
+          "location",
+          "website",
+          "summary",
+        ];
+        const pres = Object.keys(json.profile).filter((k) => pf.includes(k));
+        const miss = pf.filter((k) => !Object.keys(json.profile).includes(k));
+        if (!json.profile.fullName)
+          results.push({ section: t("profile"), key: "-", state: "ignored" });
+        else
+          results.push({
+            section: t("profile"),
+            key: json.profile.fullName,
+            state: miss.length ? "partial" : "all",
+          });
+      }
+      if (json.sections && Array.isArray(json.sections)) {
+        json.sections.forEach((sec) => {
+          const type = sec.type || "";
+          const def = SECTION_DEFS[type];
+          if (!def) {
+            results.push({
+              section: type || "Unknown",
+              key: "-",
+              state: "ignored",
+            });
+            return;
+          }
+          (sec.entries || []).forEach((entry) => {
+            const kf = def.keyField;
+            const kv = entry[kf];
+            if (!kv) {
+              results.push({ section: t(type), key: "-", state: "ignored" });
+              return;
+            }
+            const af = def.fields.map((f) => f.key);
+            const miss = af.filter(
+              (k) =>
+                entry[k] === undefined ||
+                entry[k] === "" ||
+                (Array.isArray(entry[k]) && entry[k].length === 0),
+            );
+            results.push({
+              section: t(type),
+              key: kv,
+              state: miss.length ? "partial" : "all",
+            });
+          });
+        });
+      }
+      return results;
+    }
+    function applyImportData(json) {
+      if (json.profile && json.profile.fullName)
+        resumeData.profile = { ...resumeData.profile, ...json.profile };
+      if (json.sections && Array.isArray(json.sections)) {
+        resumeData.sections = json.sections
+          .map((sec) => {
+            const def = SECTION_DEFS[sec.type];
+            if (!def) return null;
+            const entries = (sec.entries || [])
+              .filter((entry) => entry[def.keyField])
+              .map((entry) => ({ id: entry.id || genId(), ...entry }));
+            return {
+              id: sec.id || genId(),
+              type: sec.type,
+              collapsed: false,
+              visible: sec.visible !== false,
+              entries,
+            };
+          })
+          .filter(Boolean);
+      }
+    }
+    function exportData() {
+      const d = JSON.parse(JSON.stringify(resumeData));
+      d.sections.forEach((s) => {
+        delete s.collapsed;
+        delete s.visible;
+      });
+      const name =
+        `${d.profile.fullName || "Resume"}_${d.profile.position || ""}_${new Date().toISOString().slice(0, 10)}`.replace(
+          /\s+/g,
+          "_",
+        );
+      const blob = new Blob([JSON.stringify(d, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+      notify(
+        "success",
+        t("notify_exported").replace("{file}", name + ".json"),
+      );
+    }
+
+    function renderSettings() {
+      const body = document.getElementById("settings-body");
+      let html = "";
+      html += `<fieldset class="setting-group"><legend>${t("template")}</legend><div class="grid grid-cols-4 gap-2">`;
+      TEMPLATES.forEach((tmpl, i) => {
+        const c = settings.previewColor;
+        const isA = settings.template === i;
+        const nC = tmpl.colorOn.includes("name") ? c : "#374151";
+        const tC = tmpl.colorOn.includes("title") ? c : "#374151";
+        const lC = tmpl.colorOn.includes("line") ? c : "#d1d5db";
+        const iV = tmpl.showIcon && tmpl.separator !== "left";
+        const sL = tmpl.separator === "left",
+          sA = tmpl.separator === "after",
+          sB = tmpl.separator === "below";
+        const isC = tmpl.profileLayout === "center",
+          isSp = tmpl.profileLayout === "split";
+        html += `<div class="template-card${isA ? " active" : ""}" onclick="setTemplate(${i})" style="${isA ? "border-color:" + c : ""}"><div class="template-card-inner" style="font-size:3px;padding:3px 4px;background:#fff;color:#1a1a1a">`;
+        if (isC)
+          html += `<div style="text-align:center"><div style="width:16px;height:2px;margin:0 auto;background:${nC};border-radius:1px"></div><div style="width:12px;height:1px;margin:1px auto;background:#d1d5db"></div></div>`;
+        else if (isSp)
+          html += `<div style="display:flex;justify-content:space-between"><div style="width:12px;height:2px;background:${nC};border-radius:1px"></div><div style="width:10px;height:0.5px;background:#d1d5db"></div></div>`;
+        else
+          html += `<div><div style="width:12px;height:2px;background:${nC};border-radius:1px"></div><div style="width:8px;height:1px;background:#d1d5db;margin-top:1px"></div></div>`;
+        html += `<div style="height:0.5px;background:#e5e7eb"></div><div style="display:flex;align-items:center;gap:1px">`;
+        if (sL)
+          html += `<div style="width:1.5px;height:4px;background:${lC};border-radius:1px;margin-right:0.5px"></div>`;
+        if (iV)
+          html += `<div style="width:2px;height:2px;border-radius:50%;background:${tC}"></div>`;
+        html += `<div style="width:12px;height:1px;background:${tC};border-radius:0.5px"></div>`;
+        if (sA)
+          html += `<div style="flex:1;height:0.5px;background:${lC}"></div>`;
+        html += `</div><div style="padding-left:3px"><div style="width:100%;height:0.5px;background:#e5e7eb"></div></div></div></div>`;
+      });
+      html += `</div></fieldset>`;
+      html += `<fieldset class="setting-group"><legend>${t("pagination")}</legend><div class="flex items-center justify-between"><span class="text-xs">${t("singlePage")}</span><div class="toggle-switch${settings.singlePage ? " on" : ""}" onclick="toggleSinglePage()"></div></div></fieldset>`;
+      html += `<fieldset class="setting-group"><legend>${t("watermark")}</legend><input type="text" class="setting-text-input" style="margin-bottom:10px" value="${escAttr(settings.watermark.text)}" oninput="updateSetting('watermark.text',this.value)" placeholder="${t("watermarkText")}">`;
+      html +=
+        sH(
+          "watermark.fontSize",
+          t("fontSize"),
+          6,
+          48,
+          1,
+          settings.watermark.fontSize,
+          "px",
+        ) +
+        sH(
+          "watermark.opacity",
+          t("opacity"),
+          1,
+          100,
+          1,
+          settings.watermark.opacity,
+          "%",
+        ) +
+        sH(
+          "watermark.xOffset",
+          t("xOffset"),
+          -100,
+          100,
+          1,
+          settings.watermark.xOffset,
+          "px",
+        ) +
+        sH(
+          "watermark.yOffset",
+          t("yOffset"),
+          -100,
+          100,
+          1,
+          settings.watermark.yOffset,
+          "px",
+        );
+      html += `</fieldset>`;
+      html += `<fieldset class="setting-group"><legend>${t("previewColor")}</legend><div class="flex flex-wrap gap-1.5 mb-2">`;
+      PRESET_COLORS.forEach((c) => {
+        html += `<div class="color-dot${settings.previewColor === c ? " active" : ""}" style="background:${c}" onclick="setPreviewColor('${c}')"></div>`;
+      });
+      html += `</div><input type="text" class="setting-text-input" value="${escAttr(settings.previewColor)}" oninput="setPreviewColor(this.value)" placeholder="#6366f1"></fieldset>`;
+      html +=
+        `<fieldset class="setting-group"><legend>${t("pagePadding")}</legend>` +
+        sH("padding.top", t("top"), 0, 80, 1, settings.padding.top, "px") +
+        sH(
+          "padding.bottom",
+          t("bottom"),
+          0,
+          80,
+          1,
+          settings.padding.bottom,
+          "px",
+        ) +
+        sH("padding.left", t("left"), 0, 80, 1, settings.padding.left, "px") +
+        sH(
+          "padding.right",
+          t("right"),
+          0,
+          80,
+          1,
+          settings.padding.right,
+          "px",
+        ) +
+        `</fieldset>`;
+      html +=
+        `<fieldset class="setting-group"><legend>${t("typography")}</legend>` +
+        sH(
+          "typography.fontSize",
+          t("fontSize"),
+          8,
+          24,
+          0.5,
+          settings.typography.fontSize,
+          "px",
+        ) +
+        sH(
+          "typography.lineHeight",
+          t("lineHeight"),
+          1,
+          2.5,
+          0.1,
+          settings.typography.lineHeight,
+          "",
+        ) +
+        `</fieldset>`;
+      html +=
+        `<fieldset class="setting-group"><legend>${t("spacing")}</legend>` +
+        sH(
+          "spacing.section",
+          t("sectionSpacing"),
+          0,
+          40,
+          1,
+          settings.spacing.section,
+          "px",
+        ) +
+        sH(
+          "spacing.entry",
+          t("entrySpacing"),
+          0,
+          30,
+          1,
+          settings.spacing.entry,
+          "px",
+        ) +
+        `</fieldset>`;
+      body.innerHTML = html;
+      lucide.createIcons();
+    }
+    function sH(key, label, min, max, step, val, unit) {
+      return `<div class="slider-row"><label>${label}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${val}" oninput="updateSetting('${key}',parseFloat(this.value));this.nextElementSibling.textContent=this.value+'${unit}'"><span class="slider-val">${val}${unit}</span></div>`;
+    }
+    function updateSetting(key, val) {
+      const p = key.split(".");
+      if (p.length === 2) settings[p[0]][p[1]] = val;
+      else settings[key] = val;
+      saveSettings();
+      debouncePreview();
+      if (key === "previewColor") renderSettings();
+    }
+    function setTemplate(i) {
+      settings.template = i;
+      saveSettings();
+      renderSettings();
+      renderPreview();
+    }
+    function setPreviewColor(c) {
+      settings.previewColor = c;
+      saveSettings();
+      renderSettings();
+      renderPreview();
+    }
+    function toggleSinglePage() {
+      settings.singlePage = !settings.singlePage;
+      saveSettings();
+      renderSettings();
+    }
+
+    function renderPreview() {
+      const paper = document.getElementById("preview-paper");
+      const tmpl = TEMPLATES[settings.template] || TEMPLATES[0];
+      const c = settings.previewColor;
+      const s = settings;
+      const p = resumeData.profile;
+      const hasData = p.fullName || resumeData.sections.length > 0;
+      const { fontSize: fs, lineHeight: lh } = s.typography;
+      const { section: secS, entry: entS } = s.spacing;
+      const { top: pt, bottom: pb, left: pl, right: pr } = s.padding;
+      if (!hasData) {
+        paper.innerHTML = `<div style="position:relative;min-height:${A4H}px;padding:${pt}px ${pr}px ${pb}px ${pl}px"><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;color:#9ca3af;font-size:14px"><div class="empty-tip-1" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px"><i data-lucide="pen-line" style="width:28px;height:28px;color:#d1d5db"></i><span>${t("emptyTip1")}</span></div><div class="empty-tip-2" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px"><i data-lucide="upload" style="width:28px;height:28px;color:#d1d5db"></i><span>${t("emptyTip2")}</span></div></div></div>`;
+        lucide.createIcons();
+        updatePreviewScale();
+        return;
+      }
+      // Build content HTML
+      let html = `<div style="position:relative;padding:${pt}px ${pr}px ${pb}px ${pl}px;font-size:${fs}px;line-height:${lh};color:#1a1a1a">`;
+      html += `<div style="margin-bottom:20px">`;
+      if (tmpl.profileLayout === "center") {
+        html += `<div style="text-align:center"><div style="font-size:${fs * 1.8}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.1}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:6px;font-size:${fs * 0.85}px;color:#6b7280">`;
+        if (p.email) html += cI("mail") + escHTML(p.email);
+        if (p.phone) html += cI("phone") + escHTML(p.phone);
+        if (p.location) html += cI("map-pin") + escHTML(p.location);
+        if (p.website) html += cI("globe") + escHTML(p.website);
+        html += `</div></div>`;
+      } else if (tmpl.profileLayout === "split") {
+        html += `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:${fs * 1.8}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.1}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280;line-height:1.6">`;
+        if (p.email) html += escHTML(p.email) + "<br>";
+        if (p.phone) html += escHTML(p.phone) + "<br>";
+        if (p.location) html += escHTML(p.location) + "<br>";
+        if (p.website) html += escHTML(p.website);
+        html += `</div></div>`;
+      } else {
+        html += `<div><div style="font-size:${fs * 1.8}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.1}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:${fs * 0.85}px;color:#6b7280">`;
+        if (p.email) html += cI("mail") + escHTML(p.email);
+        if (p.phone) html += cI("phone") + escHTML(p.phone);
+        if (p.location) html += cI("map-pin") + escHTML(p.location);
+        if (p.website) html += cI("globe") + escHTML(p.website);
+        html += `</div></div>`;
+      }
+      if (p.summary)
+        html += `<div style="border-top:1px solid #e5e7eb;margin-top:10px;padding-top:8px;font-size:${fs * 0.9}px;color:#4b5563;line-height:${lh}">${fD(p.summary, fs, lh)}</div>`;
+      html += `</div>`;
+      resumeData.sections
+        .filter((s) => s.visible !== false)
+        .forEach((sec) => {
+          const def = SECTION_DEFS[sec.type];
+          if (!def) return;
+          const icon = def.icon;
+          const st = t(sec.type);
+          html += `<div style="margin-bottom:${secS}px">`;
+          html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;position:relative">`;
+          if (tmpl.separator === "left") {
+            html += `<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${tmpl.colorOn.includes("line") ? c : "#d1d5db"};border-radius:2px"></div><div style="padding-left:10px;display:flex;align-items:center;gap:5px">`;
+          } else {
+            html += `<div style="display:flex;align-items:center;gap:5px">`;
+          }
+
+          if (tmpl.showIcon && tmpl.separator !== "left")
+            html += `<i data-lucide="${icon}" style="width:${fs * 1.1}px;height:${fs * 1.1}px;${tmpl.colorOn.includes("icon") ? "color:" + c : ""};flex-shrink:0"></i>`;
+          html += `<span style="font-size:${fs * 1.2}px;font-weight:700;${tmpl.colorOn.includes("title") ? "color:" + c : ""}">${escHTML(st)}</span>`;
+          if (tmpl.separator === "after")
+            html += `</div><div style="flex:1;height:1px;background:${tmpl.colorOn.includes("line") ? c : "#d1d5db"};margin-left:6px">`;
+          html += `</div></div>`;
+          if (tmpl.separator === "below")
+            html += `<div style="height:1px;background:${tmpl.colorOn.includes("line") ? c : "#d1d5db"};margin-bottom:6px"></div>`;
+          html += `<div style="margin-top:${fs * 0.5}px">`;
+          (sec.entries || []).forEach((entry) => {
+            html += rE(sec.type, entry, tmpl, c, fs, lh, entS);
+          });
+          html += `</div></div>`;
+        });
+      html += `</div>`;
+      // Set content first
+      paper.innerHTML = html;
+      // Append watermark after innerHTML — covers full scrollHeight
+      if (s.watermark.text) {
+        const paperH = paper.scrollHeight;
+        const wt = s.watermark.text,
+          wfs = s.watermark.fontSize,
+          wop = s.watermark.opacity / 100,
+          wx = s.watermark.xOffset,
+          wy = s.watermark.yOffset,
+          cW = 220,
+          cH = 180;
+        const wm = document.createElement("div");
+        wm.style.cssText = `position:absolute;top:0;left:0;width:100%;height:${paperH}px;overflow:hidden;pointer-events:none;opacity:${wop};z-index:0`;
+        for (let y = -cH; y < paperH + cH; y += cH) {
+          for (let x = -cW; x < A4W + cW; x += cW) {
+            const cell = document.createElement("div");
+            cell.style.cssText = `position:absolute;left:${x + wx}px;top:${y + wy}px;font-size:${wfs}px;color:#aaa;transform:rotate(-30deg);white-space:nowrap;opacity:0.3`;
+            cell.textContent = wt;
+            wm.appendChild(cell);
+          }
+        }
+        paper.appendChild(wm);
+      }
+      lucide.createIcons();
+      updatePreviewScale();
+    }
+    function cI(n) {
+      return `<span style="display:inline-flex;align-items:center;margin-right:2px"><i data-lucide="${n}" style="width:12px;height:12px"></i></span>`;
+    }
+    function rE(type, e, tmpl, c, fs, lh, entS) {
+      const co = tmpl.colorOn;
+      const tB = co.includes("tag") ? c : "#d1d5db";
+      const tC = co.includes("tag") ? c : "";
+      const tS = `font-size:${fs * 0.78}px;padding:1px 8px;border-radius:9999px;border:1px solid ${tB};${tC ? "color:" + tC : "color:#6b7280"}`;
+      let h = `<div style="margin-bottom:${entS}px">`;
+      if (type === "education") {
+        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs * 1.05}px">${escHTML(e.university || "")}</div><div style="font-size:${fs * 0.9}px;color:#6b7280">${[e.degree, e.fieldOfStudy].filter(Boolean).join(" · ")}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280"><div>${escHTML(e.location || "")}</div><div>${escHTML(e.duration || "")}</div></div></div>`;
+        if (e.description)
+          h += `<div style="margin-top:4px;font-size:${fs * 0.88}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
+      } else if (type === "experience") {
+        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs * 1.05}px">${escHTML(e.company || "")}</div><div style="font-size:${fs * 0.9}px;color:#6b7280">${escHTML(e.position || "")}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280"><div>${escHTML(e.location || "")}</div><div>${escHTML(e.duration || "")}</div></div></div>`;
+        if (e.description)
+          h += `<div style="margin-top:4px;font-size:${fs * 0.88}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
+      } else if (type === "projects") {
+        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs * 1.05}px">${escHTML(e.name || "")}</div><div style="font-size:${fs * 0.9}px;color:#6b7280">${[e.role, e.institution].filter(Boolean).join(" · ")}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280"><div>${escHTML(e.duration || "")}</div></div></div>`;
+        if (e.tags && e.tags.length) {
+          h += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">`;
+          e.tags.forEach((tg) => {
+            h += `<span style="${tS}">${escHTML(tg)}</span>`;
+          });
+          h += `</div>`;
+        }
+        if (e.description)
+          h += `<div style="margin-top:4px;font-size:${fs * 0.88}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
+      } else if (type === "awards") {
+        h += `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:${fs}px"><div style="font-size:${fs * 0.95}px">${escHTML(e.title || "")}</div><div style="display:flex;gap:${fs * 0.5}px;font-size:${fs * 0.85}px;color:#6b7280;flex-shrink:0">${escHTML(e.issuer || "")}${e.date ? "<span>" + escHTML(e.date) + "</span>" : ""}</div></div>`;
+      } else if (type === "certifications") {
+        h += `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:${fs}px"><div style="font-size:${fs * 0.95}px">${escHTML(e.name || "")}</div><div style="display:flex;gap:${fs * 0.5}px;font-size:${fs * 0.85}px;color:#6b7280;flex-shrink:0">${escHTML(e.issuer || "")}${e.date ? "<span>" + escHTML(e.date) + "</span>" : ""}</div></div>`;
+      } else if (type === "languages") {
+        h += `<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:${fs * 0.95}px">${escHTML(e.language || "")}</span>`;
+        if (e.fluency)
+          h += `<span style="${tS}">${escHTML(e.fluency)}</span>`;
+        h += `</div>`;
+      } else if (type === "skills") {
+        h += `<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap"><span style="font-size:${fs * 0.95}px;flex-shrink:0">${escHTML(e.category || "")}</span>`;
+        if (e.tags && e.tags.length) {
+          h += `<div style="display:flex;flex-wrap:wrap;gap:3px">`;
+          e.tags.forEach((tg) => {
+            h += `<span style="${tS}">${escHTML(tg)}</span>`;
+          });
+          h += `</div>`;
+        }
+        h += `</div>`;
+      }
+      h += `</div>`;
+      return h;
+    }
+    function fD(text, fs, lh) {
+      if (!text) return "";
+      const lines = text.split("\n");
+      let inList = false,
+        h = "";
+      lines.forEach((line) => {
+        const isB = /^[-•]\s/.test(line);
+        if (isB) {
+          if (!inList) {
+            h += `<ul style="margin:0;padding-left:16px;list-style:disc">`;
+            inList = true;
+          }
+          let c = line.replace(/^[-•]\s/, "");
+          c = c.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+          h += `<li style="font-size:${fs * 0.88}px;line-height:${lh}">${c}</li>`;
+        } else {
+          if (inList) {
+            h += `</ul>`;
+            inList = false;
+          }
+          let c = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+          if (c.trim())
+            h += `<div style="font-size:${fs * 0.88}px;line-height:${lh}">${c}</div>`;
+        }
+      });
+      if (inList) h += `</ul>`;
+      return h;
+    }
+
+    function updatePreviewScale() {
+      const container = document.getElementById("preview-container");
+      const paper = document.getElementById("preview-paper");
+      const wrapper = document.getElementById("preview-wrapper");
+      if (!container || !paper) return;
+      const availW = container.clientWidth - 32;
+      const scale = Math.min(1, availW / A4W);
+      wrapper.style.transform = `scale(${scale})`;
+      wrapper.style.transformOrigin = "top center";
+      const paperH = paper.scrollHeight;
+      const extraH = paperH * (1 - scale);
+      const extraW = A4W * (1 - scale);
+      wrapper.style.marginBottom = -extraH + "px";
+      wrapper.style.marginLeft = -(extraW / 2) + "px";
+      wrapper.style.marginRight = -(extraW / 2) + "px";
+    }
+
+    async function savePDF() {
+      const btn = document.getElementById("float-save");
+      btn.disabled = true;
+      const sv = btn.querySelector("svg");
+      if (sv) {
+        const ni = document.createElement("i");
+        ni.setAttribute("data-lucide", "loader-circle");
+        ni.className = "spin-icon";
+        ni.style.cssText =
+          "width:18px;height:18px;position:relative;z-index:1";
+        sv.replaceWith(ni);
+        lucide.createIcons();
+      }
+      try {
+        const paper = document.getElementById("preview-paper");
+        const wrapper = document.getElementById("preview-wrapper");
+        const container = document.getElementById("preview-container");
+        const p = resumeData.profile;
+        const name = p.fullName || "Resume";
+        const pos = p.position ? " - " + p.position : "";
+        const date = new Date().toISOString().slice(0, 10);
+        const fn = `${name}${pos}_${date}.pdf`;
+        const pad = settings.padding;
+        const ch = paper.scrollHeight;
+        const isSingle = settings.singlePage;
+        const opt = {
+          margin: isSingle ? 0 : [pad.top, 0, pad.bottom, 0],
+          filename: fn,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            width: A4W,
+            onclone: function (doc) {
+              const w = doc.getElementById("preview-wrapper");
+              if (w) {
+                w.style.transform = "none";
+                w.style.height = "auto";
+                w.style.marginBottom = "0";
+                w.style.marginLeft = "0";
+                w.style.marginRight = "0";
+              }
+              const pc = doc.getElementById("preview-container");
+              if (pc) {
+                pc.style.overflow = "visible";
+                pc.style.height = "auto";
+                pc.style.width = "auto";
+              }
+              const bp = doc.getElementById("preview-paper");
+              if (bp) {
+                bp.style.boxShadow = "none";
+                if (isSingle) {
+                  bp.style.overflow = "hidden";
+                } else {
+                  bp.style.minHeight = "auto";
+                  bp.style.overflow = "visible";
+                  bp.style.paddingTop = "0";
+                  bp.style.paddingBottom = "0";
+                }
+              }
+              return doc;
+            },
+          },
+          jsPDF: {
+            unit: "px",
+            format: isSingle ? [A4W, Math.max(ch, A4H)] : "a4",
+            orientation: "portrait",
+            hotfixes: ["px_scaling"],
+          },
+          pagebreak: { mode: ['css','legacy'] },
+        };
+        if (isSingle) {
+          opt.html2canvas.height = ch;
+          opt.html2canvas.windowHeight = ch;
+          opt.pagebreak = { mode: [] };
+        }
+        await html2pdf().set(opt).from(paper).save();
+        notify("success", t("notify_saved").replace("{file}", fn));
+      } catch (e) {
+        console.error(e);
+        notify("error", t("notify_saveFailed"));
+      } finally {
+        btn.disabled = false;
+        const cs = btn.querySelector("svg");
+        if (cs) {
+          const ri = document.createElement("i");
+          ri.setAttribute("data-lucide", "download");
+          ri.style.cssText =
+            "width:18px;height:18px;position:relative;z-index:1";
+          cs.replaceWith(ri);
+          lucide.createIcons();
+        }
+      }
+    }
+
+    let dragCounter = 0;
+    document.addEventListener("dragenter", (e) => {
+      e.preventDefault();
+      dragCounter++;
+      if (e.dataTransfer?.types?.includes("Files"))
+        document.getElementById("drop-overlay").classList.add("active");
+    });
+    document.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      dragCounter--;
+      if (dragCounter <= 0) {
+        dragCounter = 0;
+        document.getElementById("drop-overlay").classList.remove("active");
+      }
+    });
+    document.addEventListener("dragover", (e) => e.preventDefault());
+    document.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dragCounter = 0;
+      document.getElementById("drop-overlay").classList.remove("active");
+      if (!e.dataTransfer?.types?.includes("Files")) return;
+      const files = e.dataTransfer.files;
+      if (!files || !files.length) return;
+      const file = files[0];
+      if (file.type !== "application/json" && !file.name.endsWith(".json")) {
+        notify("error", t("notify_invalidFile"));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          showImportModal(JSON.parse(ev.target.result), file.name);
+        } catch (err) {
+          notify("error", "Invalid JSON file");
+        }
+      };
+      reader.readAsText(file);
+    });
+    document.getElementById("theme-btn").addEventListener("click", () => {
+      settings.theme = settings.theme === "dark" ? "light" : "dark";
+      applyTheme();
+      saveSettings();
+    });
+    document.getElementById("lang-btn").addEventListener("click", () => {
+      settings.locale = settings.locale === "zh-CN" ? "en-US" : "zh-CN";
+      applyLocale();
+      saveSettings();
+      renderEditor();
+      renderSettings();
+      renderPreview();
+    });
+
+    function setupLoadingOverlay() {
+      const loc = detectSystemLocale();
+      const ol = document.getElementById("loading-overlay");
+      document.getElementById("loading-subtitle").textContent =
+        I18N[loc]?.loadSub || I18N["en-US"].loadSub;
+      document.getElementById("loading-dismiss").textContent =
+        I18N[loc]?.loadDismiss || I18N["en-US"].loadDismiss;
+      const feats = [
+        { icon: "square-pen", key: "loadF1" },
+        { icon: "palette", key: "loadF2" },
+        { icon: "globe", key: "loadF3" },
+        { icon: "download", key: "loadF4" },
+        { icon: "file-input", key: "loadF5" },
+      ];
+      const fc = document.getElementById("loading-features");
+      feats.forEach((f, i) => {
+        const d = document.createElement("div");
+        d.className = "load-slide";
+        d.style.animationDelay = 0.35 + i * 0.08 + "s";
+        d.style.cssText +=
+          "display:flex;align-items:center;gap:10px;padding:5px 0;font-size:0.8125rem";
+        d.innerHTML = `<div style="width:28px;height:28px;border-radius:8px;background:hsl(var(--accent));display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="${f.icon}" style="width:14px;height:14px;color:var(--accent-color)"></i></div><span style="color:hsl(var(--muted-fg))">${I18N[loc]?.[f.key] || I18N["en-US"][f.key]}</span>`;
+        fc.appendChild(d);
+      });
+      lucide.createIcons();
+      const dismiss = () => {
+        ol.classList.add("dismissed");
+        setTimeout(() => ol.remove(), 500);
+      };
+      ol.addEventListener(
+        "wheel",
+        (e) => {
+          if (e.deltaY > 0) dismiss();
+        },
+        { passive: true },
+      );
+      let tsy = 0;
+      ol.addEventListener(
+        "touchstart",
+        (e) => {
+          tsy = e.touches[0].clientY;
+        },
+        { passive: true },
+      );
+      ol.addEventListener(
+        "touchmove",
+        (e) => {
+          if (e.touches[0].clientY - tsy < -50) dismiss();
+        },
+        { passive: true },
+      );
+      ol.addEventListener("click", dismiss);
+    }
+
+    window.addEventListener("resize", updatePreviewScale);
+    function init() {
+      setupLoadingOverlay();
+      /*initTemplates(2000);*/
+      loadSettings();
+      loadUI();
+      loadData();
+      if (!localStorage.getItem(STORAGE_KEYS.settings)) {
+        settings.theme = detectSystemTheme();
+        settings.locale = detectSystemLocale();
+      }
+      applyTheme();
+      applyLocale();
+      if (uiState.editorOpen)
+        document.getElementById("editor-panel").classList.add("open");
+      if (uiState.settingsOpen)
+        document.getElementById("settings-panel").classList.add("open");
+      attachEditorEventsOnce();
+      renderEditor();
+      renderSettings();
+      renderPreview();
+      setTimeout(updatePreviewScale, 100);
+    }
+    init();
+  </script>
+</body>
+
+</html>
