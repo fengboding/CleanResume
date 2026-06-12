@@ -1079,7 +1079,7 @@
         font-size: 0.75rem;
         color: hsl(var(--muted-fg));
       ">
-    <span data-i18n="copyRight">&copy; 2026 CleanResume</span><a href="https://github.com" target="_blank" rel="noopener" class="inline-flex"
+    <span data-i18n="copyRight">&copy; 2026 CleanResume</span><a href="https://github.com/fengboding/CleanResume" target="_blank" rel="noopener" class="inline-flex"
       style="color: hsl(var(--muted-fg)); transition: color 0.15s" onmouseover="this.style.color = 'hsl(var(--fg))'"
       onmouseout="this.style.color = 'hsl(var(--muted-fg))'"><svg viewBox="0 0 16 16" width="16" height="16"
         fill="currentColor">
@@ -1675,7 +1675,7 @@
       return I18N[settings.locale]?.[k] || I18N["en-US"]?.[k] || k;
     }
     function genId() {
-      return "id-" + Math.random().toString(36).substr(2, 6);
+      return Math.random().toString(36).substr(2, 6);
     }
     function escHTML(s) {
       return String(s || "")
@@ -2009,18 +2009,34 @@
       },
       sections: [],
     };
-    let uiState = { editorOpen: false, settingsOpen: false };
+    let uiState = { 
+      editorOpen: false, 
+      settingsOpen: false,
+      sectionCollapsed: {},
+      sectionVisible: {},
+      entryCollapsed: {}
+    };
     let settings = { ...DEFAULT_SETTINGS };
     let modalCallback = null,
       addListOpen = false,
       editorListenersReady = false;
 
+    function resetData(){
+      resumeData = {
+        profile: {
+          fullName: "",
+          position: "",
+          email: "",
+          phone: "",
+          location: "",
+          website: "",
+          summary: "",
+        },
+        sections: [],
+      };
+    }
     function saveData() {
       const d = JSON.parse(JSON.stringify(resumeData));
-      d.sections.forEach((s) => {
-        delete s.collapsed;
-        delete s.visible;
-      });
       localStorage.setItem(STORAGE_KEYS.data, JSON.stringify(d));
     }
     function loadData() {
@@ -2028,13 +2044,19 @@
         const d = JSON.parse(localStorage.getItem(STORAGE_KEYS.data));
         if (d) {
           resumeData.profile = { ...resumeData.profile, ...d.profile };
-          resumeData.sections = (d.sections || []).map((s) => ({
-            ...s,
-            collapsed: s.collapsed || false,
-            visible: s.visible !== false,
-          }));
+          resumeData.sections = (d.sections || []).map((s) => ({...s}));
         }
       } catch (e) { }
+    }
+
+    function resetUI(){
+      uiState = { 
+        editorOpen: false, 
+        settingsOpen: false,
+        sectionCollapsed: {},
+        sectionVisible: {},
+        entryCollapsed: {}
+      };
     }
     function saveUI() {
       localStorage.setItem(STORAGE_KEYS.ui, JSON.stringify(uiState));
@@ -2197,27 +2219,30 @@
         const def = SECTION_DEFS[sec.type] || {};
         const icon = def.icon || "folder";
         const ec = (sec.entries || []).length;
+        const secCollapsed=uiState.sectionCollapsed[sec.id];
+        const secVisible= uiState.sectionVisible[sec.id];
         html += `<div class="section-box" data-section-id="${sec.id}"><div class="section-header" draggable="true" data-drag-section="${sec.id}"><div class="flex items-center gap-2">`;
-        html += `<button class="btn-icon p-0.5" draggable="false" data-action="toggle-collapse" data-sec="${sec.id}"><i data-lucide="${sec.collapsed ? "chevron-right" : "chevron-down"}" style="width:12px;height:12px"></i></button>`;
+        html += `<button class="btn-icon p-0.5" draggable="false" data-action="toggle-collapse" data-sec="${sec.id}"><i data-lucide="${secCollapsed ? "chevron-right" : "chevron-down"}" style="width:12px;height:12px"></i></button>`;
         html += `<i data-lucide="${icon}" style="width:14px;height:14px;color:var(--accent-color)"></i>`;
         html += `<span class="font-semibold text-xs">${t(sec.type)}</span><span class="text-[10px] rounded-full px-1.5 py-0.5 text-white" style="background:var(--accent-color)">${ec}</span></div><div class="flex items-center gap-1">`;
         html += `<button class="btn-icon btn-accent p-1" draggable="false" data-action="add-entry" data-sec="${sec.id}"><i data-lucide="plus" style="width:13px;height:13px"></i></button>`;
-        html += `<button class="btn-icon btn-accent p-1" draggable="false" data-action="toggle-visibility" data-sec="${sec.id}"><i data-lucide="${sec.visible ? "eye" : "eye-off"}" style="width:13px;height:13px"></i></button>`;
+        html += `<button class="btn-icon btn-accent p-1" draggable="false" data-action="toggle-visibility" data-sec="${sec.id}"><i data-lucide="${secVisible ? "eye" : "eye-off"}" style="width:13px;height:13px"></i></button>`;
         html += `<button class="btn-icon btn-danger p-1" draggable="false" data-action="remove-section" data-sec="${sec.id}"><i data-lucide="x" style="width:13px;height:13px"></i></button></div></div>`;
-        if (!sec.collapsed) {
+        if (!secCollapsed) {
           html += `<div class="section-body">`;
           (sec.entries || []).forEach((entry, ei) => {
             const kf = def.keyField;
             const kv = entry[kf] || entry.id.slice(-6);
+            const entCollapsed=uiState.entryCollapsed[entry.id];
             html += `<div class="entry-card" data-entry-id="${entry.id}"><div class="entry-header"><div class="flex items-center gap-2">`;
-            html += `<button class="btn-icon p-0.5" draggable="false" data-action="toggle-entry-collapse" data-sec="${sec.id}" data-entry="${entry.id}"><i data-lucide="${entry._collapsed ? "chevron-right" : "chevron-down"}" style="width:11px;height:11px"></i></button>`;
+            html += `<button class="btn-icon p-0.5" draggable="false" data-action="toggle-entry-collapse" data-sec="${sec.id}" data-entry="${entry.id}"><i data-lucide="${entCollapsed ? "chevron-right" : "chevron-down"}" style="width:11px;height:11px"></i></button>`;
             html += `<span class="text-xs" style="color:hsl(var(--muted-fg))" data-key-display="${entry.id}">${escHTML(kv)}</span></div><div class="flex items-center gap-1">`;
             if (ei > 0)
               html += `<button class="btn-icon btn-accent p-0.5" draggable="false" data-action="move-entry" data-sec="${sec.id}" data-entry="${entry.id}" data-dir="-1"><i data-lucide="arrow-up" style="width:12px;height:12px"></i></button>`;
             if (ei < sec.entries.length - 1)
               html += `<button class="btn-icon btn-accent p-0.5" draggable="false" data-action="move-entry" data-sec="${sec.id}" data-entry="${entry.id}" data-dir="1"><i data-lucide="arrow-down" style="width:12px;height:12px"></i></button>`;
             html += `<button class="btn-icon btn-danger p-0.5" draggable="false" data-action="remove-entry" data-sec="${sec.id}" data-entry="${entry.id}"><i data-lucide="trash-2" style="width:12px;height:12px"></i></button></div></div>`;
-            if (!entry._collapsed) {
+            if (!entCollapsed) {
               html += `<div class="p-2 space-y-2">`;
               (def.fields || []).forEach((f) => {
                 if (f.type === "duration")
@@ -2349,6 +2374,7 @@
                 el.dataset.part === "to" ? el.value : otherEl?.value || "";
               entry[field] = fv || tv ? `${fv} - ${tv}` : "";
             } else if (!el.dataset.tagsInput) {
+              const orgEntryId = entry.id;
               entry[field] = el.value;
               const def = SECTION_DEFS[sec.type];
               if (def && field === def.keyField) {
@@ -2667,34 +2693,28 @@
       previewTimer = setTimeout(renderPreview, 200);
     }
     function toggleCollapse(secId) {
-      const sec = resumeData.sections.find((s) => s.id === secId);
-      if (sec) {
-        sec.collapsed = !sec.collapsed;
-        saveData();
-        renderEditor();
-      }
+      uiState.sectionCollapsed[secId] = !uiState.sectionCollapsed[secId];
+      saveUI();
+      renderEditor();
     }
     function toggleEntryCollapse(secId, entryId) {
-      const sec = resumeData.sections.find((s) => s.id === secId);
-      const entry = sec?.entries?.find((e) => e.id === entryId);
-      if (entry) {
-        entry._collapsed = !entry._collapsed;
-        renderEditor();
-      }
+      uiState.entryCollapsed[entryId] = !uiState.entryCollapsed[entryId];
+      saveUI();
+      renderEditor();
     }
     function toggleSectionVisibility(secId) {
-      const sec = resumeData.sections.find((s) => s.id === secId);
-      if (sec) {
-        sec.visible = !sec.visible;
-        saveData();
-        renderEditor();
-      }
+      uiState.sectionVisible[secId] = !uiState.sectionVisible[secId];
+      saveUI();
+      renderEditor();
     }
     function addEntry(secId) {
       const sec = resumeData.sections.find((s) => s.id === secId);
       if (sec) {
         if (!sec.entries) sec.entries = [];
-        sec.entries.push({ id: genId() });
+        const entryId = genId();
+        sec.entries.push({ id: entryId });
+        uiState.entryCollapsed[entryId] = false;
+        saveUI();
         saveData();
         renderEditor();
         notify(
@@ -2731,13 +2751,17 @@
         notify("info", t(type) + " " + t("added"));
         return;
       }
+      const secId = genId();
+      const entryId = genId();
       resumeData.sections.push({
-        id: genId(),
+        id: secId,
         type,
-        collapsed: false,
-        visible: true,
-        entries: [{ id: genId() }],
+        entries: [{ id: entryId }],
       });
+      uiState.sectionCollapsed[secId] = false;
+      uiState.sectionVisible[secId] = true;
+      uiState.entryCollapsed[entryId] = false;
+      saveUI();
       saveData();
       renderEditor();
       notify(
@@ -2753,9 +2777,13 @@
         t("modal_removeSectionBody").replace("{section}", t(sec.type)),
         t("confirm"),
         () => {
+          delete uiState.sectionCollapsed[secId];
+          delete uiState.sectionVisible[secId];
+          sec.entries.forEach(entry => { delete uiState.entryCollapsed[entry.id]; })
           resumeData.sections = resumeData.sections.filter(
             (s) => s.id !== secId,
           );
+          saveUI();
           saveData();
           renderEditor();
           notify(
@@ -2778,7 +2806,9 @@
           .replace("{section}", t(sec.type)),
         t("confirm"),
         () => {
+          delete uiState.entryCollapsed[entryId];
           sec.entries = sec.entries.filter((e) => e.id !== entryId);
+          saveUI();
           saveData();
           renderEditor();
           notify(
@@ -2796,18 +2826,9 @@
         t("modal_clearBody"),
         t("confirm"),
         () => {
-          resumeData = {
-            profile: {
-              fullName: "",
-              position: "",
-              email: "",
-              phone: "",
-              location: "",
-              website: "",
-              summary: "",
-            },
-            sections: [],
-          };
+          resetUI();
+          resetData();
+          saveUI();
           saveData();
           renderEditor();
           notify("success", t("notify_cleared"));
@@ -2821,6 +2842,15 @@
         t("confirm"),
         () => {
           resumeData = getSampleData(settings.locale);
+          resetUI();
+          resumeData.sections.forEach(sec => {
+            uiState.sectionCollapsed[sec.id] = false;
+            uiState.sectionVisible[sec.id] = true;
+            sec.entries.forEach( entry => {
+              uiState.entryCollapsed[entry.id] =false;
+            })
+          });
+          saveUI();
           saveData();
           renderEditor();
           notify("success", t("notify_loaded"));
@@ -2847,9 +2877,7 @@
     }
     function toggleAddSectionList() {
       addListOpen = !addListOpen;
-      document
-        .getElementById("add-section-list")
-        .classList.toggle("open", addListOpen);
+      document.getElementById("add-section-list").classList.toggle("open", addListOpen);
     }
     function triggerImport() {
       const input = document.createElement("input");
@@ -2900,6 +2928,15 @@
       showModal(t("modal_importTitle"), bh, t("confirm"), () => {
         try {
           applyImportData(json);
+          resetUI();
+          resumeData.sections.forEach(sec => {
+            uiState.sectionCollapsed[sec.id] = false;
+            uiState.sectionVisible[sec.id] = true;
+            sec.entries.forEach( entry => {
+              uiState.entryCollapsed[entry.id] =false;
+            })
+          });
+          saveUI();
           saveData();
           renderEditor();
           notify("success", t("notify_imported").replace("{file}", fileName));
@@ -2982,8 +3019,6 @@
             return {
               id: sec.id || genId(),
               type: sec.type,
-              collapsed: false,
-              visible: sec.visible !== false,
               entries,
             };
           })
@@ -2992,10 +3027,6 @@
     }
     function exportData() {
       const d = JSON.parse(JSON.stringify(resumeData));
-      d.sections.forEach((s) => {
-        delete s.collapsed;
-        delete s.visible;
-      });
       const name =
         `${d.profile.fullName || "Resume"}_${d.profile.position || ""}_${new Date().toISOString().slice(0, 10)}`.replace(
           /\s+/g,
@@ -3237,7 +3268,7 @@
         html += `<div style="border-top:1px solid #e5e7eb;margin-top:10px;padding-top:8px;font-size:${fs * 0.9}px;color:#4b5563;line-height:${lh}">${fD(p.summary, fs, lh)}</div>`;
       html += `</div>`;
       resumeData.sections
-        .filter((s) => s.visible !== false)
+        .filter((s) => uiState.sectionVisible[s.id] !== false)
         .forEach((sec) => {
           const def = SECTION_DEFS[sec.type];
           if (!def) return;
