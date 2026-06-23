@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <script>
@@ -3245,25 +3245,25 @@
       let html = `<div style="position:relative;padding:${pt}px ${pr}px ${pb}px ${pl}px;font-size:${fs}px;line-height:${lh};color:#1a1a1a">`;
       html += `<div style="margin-bottom:20px">`;
       if (tmpl.profileLayout === "center") {
-        html += `<div style="text-align:center"><div style="font-size:${fs * 1.8}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.1}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:6px;font-size:${fs * 0.85}px;color:#6b7280">`;
-        if (p.email) html += cI("mail") + escHTML(p.email);
-        if (p.phone) html += cI("phone") + escHTML(p.phone);
-        if (p.location) html += cI("map-pin") + escHTML(p.location);
-        if (p.website) html += cI("globe") + escHTML(p.website);
+        html += `<div style="text-align:center"><div style="font-size:${fs * 2.2}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.2}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-top:6px;font-size:${fs * 0.85}px;color:#6b7280">`;
+        if (p.email) html += cI("mail",escHTML(p.email)) ;
+        if (p.phone) html += cI("phone",escHTML(p.phone));
+        if (p.location) html += cI("map-pin",escHTML(p.location));
+        if (p.website) html += cI("globe",escHTML(p.website)) ;
         html += `</div></div>`;
       } else if (tmpl.profileLayout === "split") {
-        html += `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:${fs * 1.8}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.1}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280;line-height:1.6">`;
+        html += `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:${fs * 2.2}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.2}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280;line-height:1.6">`;
         if (p.email) html += escHTML(p.email) + "<br>";
         if (p.phone) html += escHTML(p.phone) + "<br>";
         if (p.location) html += escHTML(p.location) + "<br>";
         if (p.website) html += escHTML(p.website);
         html += `</div></div>`;
       } else {
-        html += `<div><div style="font-size:${fs * 1.8}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.1}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:${fs * 0.85}px;color:#6b7280">`;
-        if (p.email) html += cI("mail") + escHTML(p.email);
-        if (p.phone) html += cI("phone") + escHTML(p.phone);
-        if (p.location) html += cI("map-pin") + escHTML(p.location);
-        if (p.website) html += cI("globe") + escHTML(p.website);
+        html += `<div><div style="font-size:${fs * 2.2}px;font-weight:700;${tmpl.colorOn.includes("name") ? "color:" + c : ""}">${escHTML(p.fullName)}</div><div style="font-size:${fs * 1.2}px;color:#6b7280;margin-top:2px">${escHTML(p.position)}</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;font-size:${fs * 0.85}px;color:#6b7280">`;
+        if (p.email) html += cI("mail",escHTML(p.email)) ;
+        if (p.phone) html += cI("phone",escHTML(p.phone)) ;
+        if (p.location) html += cI("map-pin",escHTML(p.location)) ;
+        if (p.website) html += cI("globe",escHTML(p.website)) ;
         html += `</div></div>`;
       }
       if (p.summary)
@@ -3286,7 +3286,7 @@
 
           if (tmpl.showIcon && tmpl.separator !== "left")
             html += `<i data-lucide="${icon}" style="width:${fs * 1.1}px;height:${fs * 1.1}px;${tmpl.colorOn.includes("icon") ? "color:" + c : ""};flex-shrink:0"></i>`;
-          html += `<span style="font-size:${fs * 1.2}px;font-weight:700;${tmpl.colorOn.includes("title") ? "color:" + c : ""}">${escHTML(st)}</span>`;
+          html += `<span style="font-size:${fs * 1.25}px;font-weight:600;${tmpl.colorOn.includes("title") ? "color:" + c : ""}">${escHTML(st)}</span>`;
           if (tmpl.separator === "after")
             html += `</div><div style="flex:1;height:1px;background:${tmpl.colorOn.includes("line") ? c : "#d1d5db"};margin-left:6px">`;
           html += `</div></div>`;
@@ -3326,8 +3326,8 @@
       lucide.createIcons();
       updatePreviewScale();
     }
-    function cI(n) {
-      return `<span style="display:inline-flex;align-items:center;margin-right:2px"><i data-lucide="${n}" style="width:12px;height:12px"></i></span>`;
+    function cI(n,d) {
+      return `<span style="display:inline-flex;align-items:center;margin-right:2px;gap:4px"><i data-lucide="${n}" style="width:12px;height:12px"></i>${d}</span>`;
     }
     function rE(type, e, tmpl, c, fs, lh, entS) {
       const co = tmpl.colorOn;
@@ -3336,15 +3336,15 @@
       const tS = `font-size:${fs * 0.78}px;padding:1px 8px;border-radius:9999px;border:1px solid ${tB};${tC ? "color:" + tC : "color:#6b7280"}`;
       let h = `<div style="margin-bottom:${entS}px">`;
       if (type === "education") {
-        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs * 1.05}px">${escHTML(e.university || "")}</div><div style="font-size:${fs * 0.9}px;color:#6b7280">${[e.degree, e.fieldOfStudy].filter(Boolean).join(" · ")}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280"><div>${escHTML(e.location || "")}</div><div>${escHTML(e.duration || "")}</div></div></div>`;
+        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs}px">${escHTML(e.university || "")}</div><div style="font-size:${fs * 0.8}px;color:#6b7280">${[e.degree, e.fieldOfStudy].filter(Boolean).join(" · ")}</div></div><div style="text-align:right;font-size:${fs * 0.75}px;color:#6b7280"><div>${escHTML(e.location || "")}</div><div>${escHTML(e.duration || "")}</div></div></div>`;
         if (e.description)
-          h += `<div style="margin-top:4px;font-size:${fs * 0.88}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
+          h += `<div style="margin-top:4px;font-size:${fs * 0.8}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
       } else if (type === "experience") {
-        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs * 1.05}px">${escHTML(e.company || "")}</div><div style="font-size:${fs * 0.9}px;color:#6b7280">${escHTML(e.position || "")}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280"><div>${escHTML(e.location || "")}</div><div>${escHTML(e.duration || "")}</div></div></div>`;
+        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs}px">${escHTML(e.company || "")}</div><div style="font-size:${fs * 0.8}px;color:#6b7280">${escHTML(e.position || "")}</div></div><div style="text-align:right;font-size:${fs * 0.75}px;color:#6b7280"><div>${escHTML(e.location || "")}</div><div>${escHTML(e.duration || "")}</div></div></div>`;
         if (e.description)
-          h += `<div style="margin-top:4px;font-size:${fs * 0.88}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
+          h += `<div style="margin-top:4px;font-size:${fs * 0.8}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
       } else if (type === "projects") {
-        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs * 1.05}px">${escHTML(e.name || "")}</div><div style="font-size:${fs * 0.9}px;color:#6b7280">${[e.role, e.institution].filter(Boolean).join(" · ")}</div></div><div style="text-align:right;font-size:${fs * 0.85}px;color:#6b7280"><div>${escHTML(e.duration || "")}</div></div></div>`;
+        h += `<div style="display:grid;grid-template-columns:1fr auto;gap:0 ${fs}px"><div><div style="font-weight:600;font-size:${fs}px">${escHTML(e.name || "")}</div><div style="font-size:${fs * 0.8}px;color:#6b7280">${[e.role, e.institution].filter(Boolean).join(" · ")}</div></div><div style="text-align:right;font-size:${fs * 0.75}px;color:#6b7280"><div>${escHTML(e.duration || "")}</div></div></div>`;
         if (e.tags && e.tags.length) {
           h += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">`;
           e.tags.forEach((tg) => {
@@ -3353,7 +3353,7 @@
           h += `</div>`;
         }
         if (e.description)
-          h += `<div style="margin-top:4px;font-size:${fs * 0.88}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
+          h += `<div style="margin-top:4px;font-size:${fs * 0.8}px;color:#4b5563">${fD(e.description, fs, lh)}</div>`;
       } else if (type === "awards") {
         h += `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:${fs}px"><div style="font-size:${fs * 0.95}px">${escHTML(e.title || "")}</div><div style="display:flex;gap:${fs * 0.5}px;font-size:${fs * 0.85}px;color:#6b7280;flex-shrink:0">${escHTML(e.issuer || "")}${e.date ? "<span>" + escHTML(e.date) + "</span>" : ""}</div></div>`;
       } else if (type === "certifications") {
