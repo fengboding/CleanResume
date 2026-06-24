@@ -3312,11 +3312,11 @@
           cW = 220,
           cH = 180;
         const wm = document.createElement("div");
-        wm.style.cssText = `position:absolute;top:0;left:0;width:100%;height:${paperH}px;overflow:hidden;pointer-events:none;opacity:${wop};z-index:0`;
+        wm.style.cssText = `position:absolute;top:0;left:0;width:100%;height:${paperH}px;overflow:hidden;pointer-events:none;z-index:0`;
         for (let y = -cH; y < paperH + cH; y += cH) {
           for (let x = -cW; x < A4W + cW; x += cW) {
             const cell = document.createElement("div");
-            cell.style.cssText = `position:absolute;left:${x + wx}px;top:${y + wy}px;font-size:${wfs}px;color:#aaa;transform:rotate(-30deg);white-space:nowrap;opacity:0.3`;
+            cell.style.cssText = `position:absolute;left:${x + wx}px;top:${y + wy}px;font-size:${wfs}px;color:#aaa;transform:rotate(-30deg);white-space:nowrap;opacity:${wop}`;
             cell.textContent = wt;
             wm.appendChild(cell);
           }
