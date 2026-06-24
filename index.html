@@ -3448,6 +3448,9 @@
         const pad = settings.padding;
         const ch = paper.scrollHeight;
         const isSingle = settings.singlePage;
+        const contentDiv = paper.children[0];
+        const contentH = contentDiv ? contentDiv.scrollHeight : ch;
+        const fitsOnePage = contentH + pad.top + pad.bottom <= A4H;
         const opt = {
           margin: isSingle ? 0 : [pad.top, 0, pad.bottom, 0],
           filename: fn,
@@ -3493,12 +3496,11 @@
             orientation: "portrait",
             hotfixes: ["px_scaling"],
           },
-          pagebreak: { mode: ['css','legacy'] },
+          pagebreak: { mode: (isSingle || fitsOnePage) ? [] : ["css", "legacy"] },
         };
-        if (isSingle) {
-          opt.html2canvas.height = ch;
-          opt.html2canvas.windowHeight = ch;
-          opt.pagebreak = { mode: [] };
+        if (isSingle || fitsOnePage) {
+          opt.html2canvas.height = contentH;
+          opt.html2canvas.windowHeight = contentH;
         }
         await html2pdf().set(opt).from(paper).save();
         notify("success", t("notify_saved").replace("{file}", fn));
